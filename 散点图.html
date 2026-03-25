@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>3D 散点图生成工具 - 优化版</title>
+    <script src="https://cdn.plot.ly/plotly-2.24.1.min.js"></script>
+    <style>
+        body { font-family: "Microsoft YaHei", sans-serif; background-color: #f0f2f5; margin: 0; padding: 20px; }
+        .app-container { max-width: 1100px; margin: 0 auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 8px 30px rgba(0,0,0,0.1); }
+        header { text-align: center; margin-bottom: 25px; border-bottom: 2px solid #eee; padding-bottom: 15px; }
+        
+        /* 表格样式优化 */
+        .data-section { margin-bottom: 20px; }
+        .table-scroll { max-height: 480px; overflow-y: auto; border: 1px solid #ddd; border-radius: 8px; }
+        table { width: 100%; border-collapse: collapse; }
+        th { background: #f8f9fa; padding: 12px; border: 1px solid #ddd; position: sticky; top: 0; color: #333; font-size: 14px; }
+        td { border: 1px solid #eee; padding: 0; }
+        td input { width: 100%; height: 36px; border: none; text-align: center; font-size: 14px; outline: none; }
+        td input:focus { background: #f1f7ff; }
+
+        /* 控制栏 */
+        .control-bar { display: flex; gap: 12px; align-items: center; margin-bottom: 20px; padding: 15px; background: #fafafa; border-radius: 8px; }
+        .btn { padding: 10px 24px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.3s; font-size: 14px; }
+        .btn-primary { background: #007bff; color: white; flex-grow: 2; }
+        .btn-secondary { background: #6c757d; color: white; }
+        .btn-success { background: #28a745; color: white; }
+        .btn:hover { opacity: 0.85; transform: translateY(-1px); }
+        
+        input[type="number"] { padding: 8px; border: 1px solid #ddd; border-radius: 4px; width: 60px; }
+
+        /* 图表显示区 */
+        #plot-display { width: 100%; height: 600px; border: 1px solid #eee; border-radius: 8px; background: #fff; }
+        .tip { font-size: 12px; color: #888; margin-top: 5px; }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <header>
+        <h2>专业 3D 数据可视化工具</h2>
+        <p style="color:#666">默认配置：X-速度 | Y-负载 | Z-接触面积</p>
+    </header>
+
+    <div class="data-section">
+        <div class="table-scroll">
+            <table id="inputTable">
+                <thead>
+                    <tr>
+                        <th id="h0">Speed (um/s)</th>
+                        <th id="h1">Load (mN)</th>
+                        <th id="h2">Contact Area (um²)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    </tbody>
+            </table>
+        </div>
+        <p class="tip">* 提示：直接点击单元格粘贴 Excel 数据即可自动填充</p>
+    </div>
+
+    <div class="control-bar">
+        <button class="btn btn-secondary" onclick="handlePaste()">📋 粘贴数据</button>
+        <div style="display:flex; align-items:center; gap:8px;">
+            <span>字体大小:</span>
+            <input type="number" id="plotFontSize" value="12">
+        </div>
+        <button class="btn btn-primary" onclick="updateChart()">⚡ 生成 / 刷新 3D 图表</button>
+        <button class="btn btn-success" onclick="downloadPlot()">💾 保存为图片</button>
+    </div>
+
+    <div id="plot-display"></div>
+</div>
+
+<script>
+    const tableBody = document.querySelector('#inputTable tbody');
+    const TOTAL_ROWS = 25;
+
+    // 1. 初始化表格：创建输入框
+    function initTable() {
+        for (let i = 0; i < TOTAL_ROWS; i++) {
+            const tr = document.createElement('tr');
+            for (let j = 0; j < 3; j++) {
+                const td = document.createElement('td');
+                const input = document.createElement('input');
+                input.type = "text";
+                input.id = `r${i}c${j}`;
+                td.appendChild(input);
+                tr.appendChild(td);
+            }
+            tableBody.appendChild(tr);
+        }
+    }
+
+    // 2. 粘贴逻辑
+    async function handlePaste() {
+        try {
+            const text = await navigator.clipboard.readText();
+            fillData(text);
+        } catch (e) {
+            alert("请直接在表格单元格内使用 Ctrl+V 粘贴内容。");
+        }
+    }
+
+    // 监听键盘粘贴事件
+    document.addEventListener('paste', (e) => {
+        const text = (e.clipboardData || window.clipboardData).getData('text');
+        fillData(text);
+    });
+
+    function fillData(text) {
+        const rows = text.trim().split(/\r?\n/);
+        rows.forEach((row, i) => {
+            if (i < TOTAL_ROWS) {
+                const cols = row.split('\t');
+                cols.forEach((val, j) => {
+                    if (j < 3) {
+                        const cell = document.getElementById(`r${i}c${j}`);
+                        if (cell) cell.value = val.trim();
+                    }
+                });
+            }
+        });
+    }
+
+    // 3. 绘图核心逻辑
+    function updateChart() {
+        const x = [], y = [], z = [];
+        const fontSize = parseInt(document.getElementById('plotFontSize').value) || 12;
+
+        // 读取表格数据
+        for (let i = 0; i < TOTAL_ROWS; i++) {
+            const vX = document.getElementById(`r${i}c0`).value;
+            const vY = document.getElementById(`r${i}c1`).value;
+            const vZ = document.getElementById(`r${i}c2`).value;
+
+            if (vX !== "" && vY !== "" && vZ !== "") {
+                x.push(parseFloat(vX));
+                y.push(parseFloat(vY));
+                z.push(parseFloat(vZ));
+            }
+        }
+
+        if (x.length === 0) {
+            alert("未检测到有效数据，请先输入或粘贴数据。");
+            return;
+        }
+
+        // 获取当前表头内容作为坐标轴标题
+        const labelX = document.getElementById('h0').innerText;
+        const labelY = document.getElementById('h1').innerText;
+        const labelZ = document.getElementById('h2').innerText;
+
+        const trace = {
+            x: x, y: y, z: z,
+            mode: 'markers',
+            type: 'scatter3d',
+            marker: {
+                size: 6,
+                color: z, // 以 Z 轴数值映射颜色
+                colorscale: 'Viridis',
+                showscale: true,
+                opacity: 0.8
+            }
+        };
+
+        const layout = {
+            scene: {
+                xaxis: { title: labelX, titlefont: { size: fontSize }, tickfont: { size: fontSize - 2 } },
+                yaxis: { title: labelY, titlefont: { size: fontSize }, tickfont: { size: fontSize - 2 } },
+                zaxis: { title: labelZ, titlefont: { size: fontSize }, tickfont: { size: fontSize - 2 } },
+                aspectmode: 'cube'
+            },
+            margin: { l: 0, r: 0, b: 0, t: 0 },
+            paper_bgcolor: 'white'
+        };
+
+        const config = { responsive: true, displaylogo: false };
+
+        Plotly.newPlot('plot-display', [trace], layout, config);
+    }
+
+    // 4. 图片导出功能
+    function downloadPlot() {
+        const gd = document.getElementById('plot-display');
+        if (!gd.data) {
+            alert("请先生成图表！");
+            return;
+        }
+        Plotly.downloadImage(gd, {
+            format: 'png',
+            width: 1200,
+            height: 900,
+            filename: '3D_Scatter_Chart'
+        });
+    }
+
+    // 页面加载时初始化
+    initTable();
+</script>
+
+</body>
+</html>
