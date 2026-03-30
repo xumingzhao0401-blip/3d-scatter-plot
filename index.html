@@ -2,117 +2,144 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>3D Data Analysis & Interpolation Tool</title>
+    <title>Ultimate 3D/2D Data Analysis Tool</title>
     <script src="https://cdn.plot.ly/plotly-2.24.1.min.js"></script>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
     <style>
-        body { font-family: "Segoe UI", "Microsoft YaHei", sans-serif; background-color: #f4f7f9; margin: 0; padding: 20px; }
-        .app-container { max-width: 1260px; margin: 0 auto; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
-        header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #eee; padding-bottom: 15px; }
+        body { font-family: "Segoe UI", "Microsoft YaHei", sans-serif; background-color: #f0f2f5; margin: 0; padding: 20px; }
+        .app-container { max-width: 1300px; margin: 0 auto; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #eee; padding-bottom: 10px; }
         
-        .table-scroll { max-height: 350px; overflow-y: auto; border: 1px solid #dcdfe6; border-radius: 8px; margin-bottom: 20px; }
+        /* 表格区域样式 - 确保显眼 */
+        .table-section { border: 2px solid #e4e7ed; border-radius: 8px; padding: 15px; margin-bottom: 20px; background: #fff; }
+        .table-header-tools { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .table-scroll { max-height: 350px; overflow-y: auto; border: 1px solid #dcdfe6; }
+        
         table { width: 100%; border-collapse: collapse; table-layout: fixed; }
-        th { background: #f5f7fa; padding: 12px; border: 1px solid #dcdfe6; position: sticky; top: 0; color: #606266; font-size: 13px; z-index: 10; }
+        th { background: #f5f7fa; padding: 10px; border: 1px solid #dcdfe6; position: sticky; top: 0; color: #606266; font-size: 13px; z-index: 10; }
         td { border: 1px solid #ebeef5; padding: 0; text-align: center; }
-        td input { width: 100%; height: 34px; border: none; text-align: center; font-size: 14px; outline: none; background: transparent; }
-        td input:focus { background: #ecf5ff; box-shadow: inset 0 0 0 1px #409eff; }
-        td select { width: 95%; font-size: 12px; border: 1px solid #dcdfe6; border-radius: 4px; cursor: pointer; }
+        td input { width: 100%; height: 32px; border: none; text-align: center; font-size: 14px; outline: none; background: transparent; }
+        td input:focus { background: #ecf5ff; }
 
-        .control-panel { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-bottom: 20px; padding: 20px; background: #fafafa; border-radius: 10px; border: 1px solid #eee; }
-        .control-group { display: flex; flex-direction: column; gap: 8px; background: #fff; padding: 12px; border-radius: 8px; border: 1px solid #eee; }
-        .control-group label { font-size: 13px; font-weight: bold; color: #303133; }
+        /* 控制面板 */
+        .control-panel { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .control-group { background: #fafafa; padding: 15px; border-radius: 10px; border: 1px solid #eee; }
+        .control-group label { font-size: 13px; font-weight: bold; display: block; margin-bottom: 8px; color: #303133; }
 
-        .control-bar { display: flex; gap: 10px; align-items: center; margin-bottom: 15px; flex-wrap: wrap; }
-        .btn { padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: 500; font-size: 13px; transition: 0.2s; display: flex; align-items: center; gap: 6px; }
+        /* 按钮样式 */
+        .btn-group { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px; }
+        .btn { padding: 10px 18px; border: none; border-radius: 6px; cursor: pointer; font-weight: 500; font-size: 13px; display: flex; align-items: center; gap: 6px; transition: 0.2s; }
+        .btn-purple { background: #8e44ad; color: white; box-shadow: 0 3px 6px rgba(142,68,173,0.3); } /* 粘贴按钮 */
         .btn-primary { background: #409eff; color: white; }
         .btn-success { background: #67c23a; color: white; }
-        .btn-warning { background: #e6a23c; color: white; }
+        .btn-danger { background: #f56c6c; color: white; }
         .btn-info { background: #909399; color: white; }
         .btn-dark { background: #2f3542; color: white; }
-        .btn-danger { background: #f56c6c; color: white; }
         .btn:hover { opacity: 0.8; transform: translateY(-1px); }
 
-        #plot-container { position: relative; width: 100%; height: 600px; background: #fff; border: 1px solid #eee; border-radius: 8px; overflow: hidden; margin-top: 10px; }
+        /* 图表容器 - 2D正方形逻辑 */
+        #plot-container { 
+            background: #fff; border: 1px solid #eee; border-radius: 10px; margin-top: 10px;
+            display: flex; justify-content: center; align-items: center; overflow: hidden;
+            width: 100%; height: 600px;
+        }
         #plot-display { width: 100%; height: 100%; }
-        #plot-container:fullscreen { width: 100vw; height: 100vh; }
 
-        .tip { font-size: 12px; color: #909399; margin-top: 8px; }
-        #fileInput { display: none; }
+        /* 2D 模式下的正方形约束 */
+        .square-mode { aspect-ratio: 1 / 1; width: 600px !important; height: 600px !important; margin: 0 auto; }
+
+        .hidden { display: none !important; }
+        .tip { font-size: 12px; color: #909399; margin-top: 5px; }
     </style>
 </head>
 <body>
 
 <div class="app-container">
     <header>
-        <h2 style="margin:0; color:#303133;">3D Data Visualization Tool</h2>
-        <p style="color:#909399; font-size: 14px;">X: Speed (um/s) | Y: Load (mN) | Z: Area (um²)</p>
+        <h2 style="margin:0; color:#303133;">多维数据分析与插值工具 (3D/2D)</h2>
     </header>
 
-    <div class="data-section">
+    <div class="table-section">
+        <div class="table-header-tools">
+            <div style="display:flex; gap:10px; align-items:center;">
+                <button class="btn btn-purple" onclick="manualPaste()">📋 一键粘贴 Excel 数据</button>
+                <span class="tip">支持直接 Ctrl+V 粘贴三列数据</span>
+            </div>
+            <button class="btn btn-danger" onclick="clearTable()">🗑️ 清空表格</button>
+        </div>
         <div class="table-scroll">
             <table id="inputTable">
                 <thead>
                     <tr>
                         <th style="width:50px">#</th>
-                        <th>Speed (um/s)</th>
-                        <th>Load (mN)</th>
-                        <th>Area (um²)</th>
-                        <th style="width:130px">Point Color</th>
+                        <th>变量 1: Speed (um/s)</th>
+                        <th>变量 2: Load (mN)</th>
+                        <th>变量 3: Area (um²)</th>
+                        <th style="width:120px">点颜色 (3D)</th>
                     </tr>
                 </thead>
-                <tbody></tbody>
+                <tbody>
+                    </tbody>
             </table>
         </div>
     </div>
 
     <div class="control-panel">
-        <div class="control-group">
-            <label>Surface Settings</label>
+        <div class="control-group" style="background: #eef5fe;">
+            <label>🌐 绘图模式选择</label>
+            <div style="display:flex; gap:20px;">
+                <label style="font-weight:normal;"><input type="radio" name="plotMode" value="3d" checked onchange="toggleUI()"> 3D 散点曲面</label>
+                <label style="font-weight:normal;"><input type="radio" name="plotMode" value="2d" onchange="toggleUI()"> 2D 正方形等高线</label>
+            </div>
+        </div>
+
+        <div class="control-group" id="ui-3d-only">
+            <label>3D 设置</label>
             <div style="display:flex; flex-direction:column; gap:8px;">
-                <div style="display:flex; align-items:center; gap:8px;">
-                    <input type="checkbox" id="showSurface" checked onchange="updateChart()"> 
-                    <label for="showSurface" style="cursor:pointer; font-size:13px">Enable 3D Interpolated Surface</label>
-                </div>
+                <label style="font-weight:normal;"><input type="checkbox" id="showSurface" checked onchange="updateChart()"> 显示插值趋势面</label>
                 <div style="display:flex; gap:5px">
-                    <select id="colorMode" style="flex:1">
-                        <option value="perpoint">Individual Point Color</option>
-                        <option value="zvalue">Z-Value Color Mapping</option>
+                    <select id="colorMode" style="flex:1" onchange="updateChart()">
+                        <option value="perpoint">使用表格预设颜色</option>
+                        <option value="zvalue">按 Z 轴数值映射颜色</option>
                     </select>
-                    <input type="color" id="solidColor" value="#409eff">
+                    <input type="color" id="baseColor" value="#409eff" onchange="updateChart()">
                 </div>
             </div>
         </div>
-        <div class="control-group">
-            <label>Presentation & Visuals</label>
-            <div style="display:flex; gap:10px; align-items:center">
-                <span style="font-size:12px">Rotate Spd:</span>
-                <input type="range" id="rotateSpeed" min="0.005" max="0.05" step="0.005" value="0.015" style="flex:1">
-            </div>
-            <div style="display:flex; gap:10px; align-items:center">
-                <span style="font-size:12px">Pt Size:</span>
-                <input type="number" id="pointSize" value="12" style="width:50px">
-                <span style="font-size:12px">Surf Opacity:</span>
-                <input type="number" id="surfOpacity" value="0.6" min="0.1" max="1" step="0.1" style="width:50px">
+
+        <div class="control-group hidden" id="ui-2d-only">
+            <label>2D 等高线配置</label>
+            <div style="display:grid; grid-template-columns: 50px 1fr; gap:8px; align-items:center;">
+                <span style="font-size:12px">X轴:</span> <select id="selX" onchange="syncAxis()"></select>
+                <span style="font-size:12px">Y轴:</span> <select id="selY" onchange="syncAxis()"></select>
+                <span style="font-size:12px">映射:</span> <select id="selZ" disabled style="background:#eee"></select>
             </div>
         </div>
+
         <div class="control-group">
-            <label>Axis Formatting</label>
-            <div class="tip">SI Prefixes Disabled (90 stays 90, not 90k).</div>
-            <div class="tip">All labels set to English.</div>
+            <label>通用视觉控制</label>
+            <div style="display:flex; gap:10px; align-items:center;">
+                <span style="font-size:12px">点大小:</span><input type="number" id="ptSize" value="10" style="width:40px">
+                <span style="font-size:12px">透明度:</span><input type="number" id="opacity" value="0.8" step="0.1" min="0.1" max="1" style="width:40px">
+                <select id="colorScale" onchange="updateChart()">
+                    <option value="Viridis">颜色: 翡翠 (Viridis)</option>
+                    <option value="Plasma">颜色: 极光 (Plasma)</option>
+                    <option value="Hot">颜色: 熔岩 (Hot)</option>
+                </select>
+            </div>
         </div>
     </div>
 
-    <div class="control-bar">
-        <button class="btn btn-primary" onclick="updateChart()">⚡ Refresh Plot</button>
-        <button class="btn btn-info" id="rotateBtn" onclick="toggleRotation()">🔄 Auto Rotate</button>
-        <button class="btn btn-dark" onclick="toggleFullScreen()">🖥️ Fullscreen</button>
-        <button class="btn btn-success" onclick="exportToExcel()">📊 Export Excel</button>
-        <button class="btn btn-warning" onclick="exportProject()">💾 Export Project</button>
-        <button class="btn btn-info" onclick="document.getElementById('fileInput').click()">📂 Import Project</button>
-        <button class="btn btn-danger" onclick="clearTable()">🗑️ Clear Data</button>
+    <div class="btn-group">
+        <button class="btn btn-primary" onclick="updateChart()">⚡ 刷新图表</button>
+        <button class="btn btn-info" id="rotateBtn" onclick="toggleRotation()">🔄 3D 自动旋转</button>
+        <button class="btn btn-dark" onclick="toggleFullScreen()">🖥️ 全屏展示</button>
+        <button class="btn btn-success" onclick="exportToExcel()">📊 导出 Excel</button>
+        <button class="btn btn-warning" onclick="saveProject()">💾 保存项目</button>
+        <button class="btn btn-info" onclick="document.getElementById('fileInput').click()">📂 打开项目</button>
     </div>
-    
-    <input type="file" id="fileInput" accept=".3dvis" onchange="importProject(event)">
+
+    <input type="file" id="fileInput" accept=".3dvis" onchange="loadProject(event)">
 
     <div id="plot-container">
         <div id="plot-display"></div>
@@ -122,8 +149,10 @@
 <script>
     const tableBody = document.querySelector('#inputTable tbody');
     const TOTAL_ROWS = 50;
-    const colorChoices = [['Default', 'panel_default'], ['Red', '#ff4d4f'], ['Blue', '#1890ff'], ['Green', '#52c41a'], ['Gold', '#faad14'], ['Black', '#262626']];
+    const varNames = ['Speed (um/s)', 'Load (mN)', 'Area (um²)'];
+    const colors = [['默认', 'default'], ['红', '#ff4d4f'], ['蓝', '#1890ff'], ['绿', '#52c41a'], ['黄', '#faad14']];
 
+    // 初始化表格
     function initTable() {
         tableBody.innerHTML = '';
         for (let i = 0; i < TOTAL_ROWS; i++) {
@@ -132,160 +161,191 @@
                 <td><input type="text" id="r${i}c0"></td>
                 <td><input type="text" id="r${i}c1"></td>
                 <td><input type="text" id="r${i}c2"></td>
-                <td><select id="r${i}_color"></select></td>`;
+                <td><select id="r${i}color"></select></td>`;
             const sel = tr.querySelector('select');
-            colorChoices.forEach(([t, v]) => sel.add(new Option(t, v)));
+            colors.forEach(c => sel.add(new Option(c[0], c[1])));
             tableBody.appendChild(tr);
         }
     }
 
-    // IDW Interpolation
-    function generateInterpolatedSurface(points, res = 30) {
-        if (points.length < 3) return null;
-        let xVals = points.map(p => p.x), yVals = points.map(p => p.y);
-        let xMin = Math.min(...xVals), xMax = Math.max(...xVals);
-        let yMin = Math.min(...yVals), yMax = Math.max(...yVals);
-
-        let gridX = [], gridY = [], gridZ = [];
-        for (let i = 0; i <= res; i++) {
-            gridX.push(xMin + (xMax - xMin) * (i / res));
-            gridY.push(yMin + (yMax - yMin) * (i / res));
-        }
-
-        for (let j = 0; j <= res; j++) {
-            let rowZ = [];
-            for (let i = 0; i <= res; i++) {
-                let xi = gridX[i], yi = gridY[j];
-                let num = 0, den = 0, found = null;
-                for (let p of points) {
-                    let d = Math.sqrt((xi - p.x)**2 + (yi - p.y)**2);
-                    if (d < 0.0001) { found = p.z; break; }
-                    let w = 1 / (d**2);
-                    num += p.z * w; den += w;
-                }
-                rowZ.push(found !== null ? found : (num / den));
-            }
-            gridZ.push(rowZ);
-        }
-        return { x: gridX, y: gridY, z: gridZ };
-    }
-
-    function updateChart() {
-        const points = [];
-        const globalColor = document.getElementById('solidColor').value;
-        const mode = document.getElementById('colorMode').value;
-        const ptColors = [];
-
-        for (let i = 0; i < TOTAL_ROWS; i++) {
-            let vx = parseFloat(document.getElementById(`r${i}c0`).value);
-            let vy = parseFloat(document.getElementById(`r${i}c1`).value);
-            let vz = parseFloat(document.getElementById(`r${i}c2`).value);
-            if (!isNaN(vx) && !isNaN(vy) && !isNaN(vz)) {
-                points.push({x: vx, y: vy, z: vz});
-                let c = document.getElementById(`r${i}_color`).value;
-                ptColors.push(c === 'panel_default' ? globalColor : c);
-            }
-        }
-        if (points.length === 0) return;
-
-        const traces = [];
-        // 1. 3D Scatter Trace
-        traces.push({
-            x: points.map(p => p.x), y: points.map(p => p.y), z: points.map(p => p.z),
-            mode: 'markers', type: 'scatter3d', name: 'Measured Points',
-            marker: {
-                size: document.getElementById('pointSize').value,
-                color: mode === 'zvalue' ? points.map(p => p.z) : ptColors,
-                colorscale: mode === 'zvalue' ? 'Viridis' : null,
-                opacity: 1, line: { width: 1, color: '#fff' }
-            },
-            hovertemplate: 'Speed: %{x} um/s<br>Load: %{y} mN<br>Area: %{z} um²<extra></extra>'
+    // 初始化 2D 轴选择
+    function initSelectors() {
+        const sx = document.getElementById('selX'), sy = document.getElementById('selY'), sz = document.getElementById('selZ');
+        varNames.forEach((n, i) => {
+            sx.add(new Option(n, i)); sy.add(new Option(n, i)); sz.add(new Option(n, i));
         });
-
-        // 2. 3D Interpolated Surface Trace
-        if (document.getElementById('showSurface').checked && points.length >= 3) {
-            const surf = generateInterpolatedSurface(points);
-            traces.push({
-                x: surf.x, y: surf.y, z: surf.z,
-                type: 'surface', name: 'Interpolated Surface',
-                opacity: document.getElementById('surfOpacity').value,
-                showscale: false,
-                colorscale: [[0, 'rgba(200,200,200,0.2)'], [1, 'rgba(100,100,100,0.5)']]
-            });
-        }
-
-        // Axis formatting (English only, no SI prefix)
-        const axisStyle = {
-            exponentformat: 'none', 
-            tickformat: '', 
-            titlefont: { size: 14 },
-            tickfont: { size: 12 }
-        };
-
-        const layout = {
-            scene: {
-                xaxis: { title: 'Speed (um/s)', ...axisStyle },
-                yaxis: { title: 'Load (mN)', ...axisStyle },
-                zaxis: { title: 'Area (um²)', ...axisStyle },
-                camera: { eye: { x: 1.8, y: 1.8, z: 1.2 } }
-            },
-            margin: { l: 0, r: 0, b: 0, t: 30 },
-            showlegend: false
-        };
-
-        Plotly.newPlot('plot-display', traces, layout, { responsive: true, displaylogo: false });
+        sx.value = 0; sy.value = 1; sz.value = 2;
     }
 
-    let isRotating = false, rotationTimer = null, angle = 0;
+    function syncAxis() {
+        const x = parseInt(document.getElementById('selX').value);
+        const y = parseInt(document.getElementById('selY').value);
+        if (x === y) document.getElementById('selY').value = (x + 1) % 3;
+        const newX = parseInt(document.getElementById('selX').value);
+        const newY = parseInt(document.getElementById('selY').value);
+        document.getElementById('selZ').value = [0,1,2].find(i => i!==newX && i!==newY);
+        updateChart();
+    }
+
+    // 核心粘贴功能
+    async function manualPaste() {
+        try {
+            const text = await navigator.clipboard.readText();
+            doPaste(text);
+        } catch (e) { alert("无法读取剪贴板，请按 Ctrl+V 直接粘贴。"); }
+    }
+
+    function doPaste(text) {
+        const rows = text.trim().split(/\r?\n/);
+        rows.forEach((row, i) => {
+            if (i < TOTAL_ROWS) {
+                const cols = row.split('\t');
+                cols.forEach((val, j) => {
+                    if (j < 3) document.getElementById(`r${i}c${j}`).value = val.trim();
+                });
+            }
+        });
+        updateChart();
+    }
+
+    document.addEventListener('paste', (e) => {
+        if (e.target.tagName === 'INPUT') return;
+        doPaste(e.clipboardData.getData('text'));
+    });
+
+    // 插值算法 (IDW)
+    function interpolate(pts, idxs, res = 50) {
+        if (pts.length < 3) return null;
+        const x = pts.map(p => p[idxs.x]), y = pts.map(p => p[idxs.y]), z = pts.map(p => p[idxs.z]);
+        const xMin = Math.min(...x), xMax = Math.max(...x), yMin = Math.min(...y), yMax = Math.max(...y);
+        const gx = [], gy = [], gz = [];
+        for (let i=0; i<=res; i++) gx.push(xMin + (xMax-xMin)*(i/res)), gy.push(yMin + (yMax-yMin)*(i/res));
+        for (let j=0; j<=res; j++) {
+            const row = [];
+            for (let i=0; i<=res; i++) {
+                let num=0, den=0, hit=null;
+                for (let k=0; k<pts.length; k++) {
+                    const d = Math.sqrt((gx[i]-x[k])**2 + (gy[j]-y[k])**2);
+                    if (d < 0.0001) { hit=z[k]; break; }
+                    const w = 1/(d**2); num += z[k]*w; den += w;
+                }
+                row.push(hit !== null ? hit : num/den);
+            }
+            gz.push(row);
+        }
+        return { x: gx, y: gy, z: gz };
+    }
+
+    // 绘图
+    function updateChart() {
+        const pts = [];
+        const rowCols = [];
+        for (let i=0; i<TOTAL_ROWS; i++) {
+            const v0 = parseFloat(document.getElementById(`r${i}c0`).value);
+            const v1 = parseFloat(document.getElementById(`r${i}c1`).value);
+            const v2 = parseFloat(document.getElementById(`r${i}c2`).value);
+            if (!isNaN(v0) && !isNaN(v1) && !isNaN(v2)) {
+                pts.push([v0,v1,v2]);
+                rowCols.push(document.getElementById(`r${i}color`).value);
+            }
+        }
+        if (pts.length === 0) return;
+
+        const mode = document.querySelector('input[name="plotMode"]:checked').value;
+        const traces = [];
+        const commonAxis = { exponentformat: 'none', tickformat: '', automargin: true };
+
+        if (mode === '3d') {
+            const baseC = document.getElementById('baseColor').value;
+            const finalCols = rowCols.map(c => c==='default' ? baseC : c);
+            traces.push({
+                x: pts.map(p=>p[0]), y: pts.map(p=>p[1]), z: pts.map(p=>p[2]),
+                type: 'scatter3d', mode: 'markers',
+                marker: { size: document.getElementById('ptSize').value, color: finalCols, opacity: 1 }
+            });
+            if (document.getElementById('showSurface').checked && pts.length >= 3) {
+                const surf = interpolate(pts, {x:0, y:1, z:2});
+                if (surf) traces.push({ x: surf.x, y: surf.y, z: surf.z, type: 'surface', opacity: document.getElementById('opacity').value, showscale: false });
+            }
+            var layout = { scene: { xaxis: {title: varNames[0], ...commonAxis}, yaxis: {title: varNames[1], ...commonAxis}, zaxis: {title: varNames[2], ...commonAxis} }, margin: {l:0,r:0,b:0,t:0} };
+        } else {
+            const ix = parseInt(document.getElementById('selX').value);
+            const iy = parseInt(document.getElementById('selY').value);
+            const iz = parseInt(document.getElementById('selZ').value);
+            const grid = interpolate(pts, {x:ix, y:iy, z:iz}, 60);
+            if (grid) traces.push({
+                x: grid.x, y: grid.y, z: grid.z, type: 'contour', 
+                colorscale: document.getElementById('colorScale').value, 
+                opacity: document.getElementById('opacity').value,
+                contours: { coloring: 'fill', showlines: true }
+            });
+            traces.push({ x: pts.map(p=>p[ix]), y: pts.map(p=>p[iy]), mode: 'markers', type: 'scatter', marker: {color:'#fff', line:{width:1, color:'#000'}} });
+            var layout = { xaxis: {title: varNames[ix], ...commonAxis}, yaxis: {title: varNames[iy], ...commonAxis} };
+        }
+
+        Plotly.newPlot('plot-display', traces, layout, {responsive:true, displaylogo:false});
+    }
+
+    function toggleUI() {
+        const mode = document.querySelector('input[name="plotMode"]:checked').value;
+        const is3D = (mode === '3d');
+        document.getElementById('ui-3d-only').classList.toggle('hidden', !is3D);
+        document.getElementById('ui-2d-only').classList.toggle('hidden', is3D);
+        document.getElementById('rotateBtn').disabled = !is3D;
+        document.getElementById('plot-container').classList.toggle('square-mode', !is3D);
+        Plotly.Plots.resize('plot-display');
+        updateChart();
+    }
+
+    // 旋转/导出/保存等... (保留原有功能)
+    let rotating = false, rotTimer = null, angle = 0;
     function toggleRotation() {
+        rotating = !rotating;
         const btn = document.getElementById('rotateBtn');
-        isRotating = !isRotating;
-        if (isRotating) {
-            btn.innerText = "🛑 Stop Rotation"; btn.style.background = "#f56c6c";
-            rotationTimer = setInterval(() => {
-                angle += parseFloat(document.getElementById('rotateSpeed').value);
-                Plotly.relayout('plot-display', { 'scene.camera.eye': { x: 2.2 * Math.cos(angle), y: 2.2 * Math.sin(angle), z: 1.2 } });
+        if (rotating) {
+            btn.innerText = "🛑 停止旋转"; btn.style.background = "#f56c6c";
+            rotTimer = setInterval(() => {
+                angle += 0.015;
+                Plotly.relayout('plot-display', { 'scene.camera.eye': { x: 2*Math.cos(angle), y: 2*Math.sin(angle), z: 1.2 } });
             }, 40);
         } else {
-            btn.innerText = "🔄 Auto Rotate"; btn.style.background = "#909399";
-            clearInterval(rotationTimer);
+            btn.innerText = "🔄 3D 自动旋转"; btn.style.background = "#909399";
+            clearInterval(rotTimer);
         }
     }
 
     function toggleFullScreen() {
-        const elem = document.getElementById('plot-container');
-        if (!document.fullscreenElement) elem.requestFullscreen();
-        else document.exitFullscreen();
+        const p = document.getElementById('plot-container');
+        if (!document.fullscreenElement) p.requestFullscreen(); else document.exitFullscreen();
     }
     document.addEventListener('fullscreenchange', () => Plotly.Plots.resize('plot-display'));
 
     function exportToExcel() {
-        const data = [["#", "Speed (um/s)", "Load (mN)", "Area (um²)", "Color"]];
-        for (let i = 0; i < TOTAL_ROWS; i++) {
-            const row = [document.getElementById(`r${i}c0`).value, document.getElementById(`r${i}c1`).value, document.getElementById(`r${i}c2`).value];
-            if (row.some(v => v !== '')) data.push([i+1, ...row, document.getElementById(`r${i}_color`).value]);
+        const data = [["#", ...varNames]];
+        for (let i=0; i<TOTAL_ROWS; i++) {
+            const r = [document.getElementById(`r${i}c0`).value, document.getElementById(`r${i}c1`).value, document.getElementById(`r${i}c2`).value];
+            if (r.some(v => v)) data.push([i+1, ...r]);
         }
-        XLSX.writeFile({SheetNames: ["Data"], Sheets: {"Data": XLSX.utils.aoa_to_sheet(data)}}, `Data_Export_${new Date().toISOString().slice(0,10)}.xlsx`);
+        XLSX.writeFile({SheetNames: ["Data"], Sheets: {"Data": XLSX.utils.aoa_to_sheet(data)}}, "Data_Export.xlsx");
     }
 
-    function exportProject() {
-        const data = Array.from({length: TOTAL_ROWS}, (_, i) => ({
-            x: document.getElementById(`r${i}c0`).value, y: document.getElementById(`r${i}c1`).value,
-            z: document.getElementById(`r${i}c2`).value, c: document.getElementById(`r${i}_color`).value
+    function saveProject() {
+        const table = Array.from({length: TOTAL_ROWS}, (_, i) => ({
+            v0: document.getElementById(`r${i}c0`).value, v1: document.getElementById(`r${i}c1`).value, 
+            v2: document.getElementById(`r${i}c2`).value, c: document.getElementById(`r${i}color`).value
         }));
-        const blob = new Blob([JSON.stringify(data)], {type: 'application/json'});
-        const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
-        a.download = `Project_${Date.now()}.3dvis`; a.click();
+        const blob = new Blob([JSON.stringify(table)], {type: 'application/json'});
+        const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `Project_${Date.now()}.3dvis`; a.click();
     }
 
-    function importProject(e) {
+    function loadProject(e) {
         const reader = new FileReader();
         reader.onload = (ev) => {
-            const p = JSON.parse(ev.target.result);
-            p.forEach((row, i) => {
+            const data = JSON.parse(ev.target.result);
+            data.forEach((r, i) => {
                 if (i < TOTAL_ROWS) {
-                    document.getElementById(`r${i}c0`).value = row.x; document.getElementById(`r${i}c1`).value = row.y;
-                    document.getElementById(`r${i}c2`).value = row.z; document.getElementById(`r${i}_color`).value = row.c;
+                    document.getElementById(`r${i}c0`).value = r.v0; document.getElementById(`r${i}c1`).value = r.v1;
+                    document.getElementById(`r${i}c2`).value = r.v2; document.getElementById(`r${i}color`).value = r.c;
                 }
             });
             updateChart();
@@ -293,16 +353,10 @@
         reader.readAsText(e.target.files[0]);
     }
 
-    function clearTable() { if(confirm('Clear all data?')) { initTable(); Plotly.purge('plot-display'); } }
-
-    document.addEventListener('paste', (e) => {
-        const text = (e.clipboardData || window.clipboardData).getData('text');
-        text.trim().split(/\r?\n/).forEach((row, i) => {
-            row.split('\t').forEach((val, j) => { if (j < 3 && i < TOTAL_ROWS) document.getElementById(`r${i}c${j}`).value = val.trim(); });
-        });
-    });
+    function clearTable() { if(confirm('确定清空所有数据吗？')) { initTable(); Plotly.purge('plot-display'); } }
 
     initTable();
+    initSelectors();
 </script>
 </body>
 </html>
