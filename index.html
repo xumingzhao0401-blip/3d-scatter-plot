@@ -1,130 +1,374 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <title>Ultimate 3D/2D Data Analysis Tool</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ultimate 3D/2D Data Analysis Tool - Enhanced</title>
     <script src="https://cdn.plot.ly/plotly-2.24.1.min.js"></script>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
     <style>
-        body { font-family: "Segoe UI", "Microsoft YaHei", sans-serif; background-color: #f0f2f5; margin: 0; padding: 20px; }
-        .app-container { max-width: 1300px; margin: 0 auto; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
-        header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #eee; padding-bottom: 10px; }
-        
-        /* 表格区域样式 - 确保显眼 */
-        .table-section { border: 2px solid #e4e7ed; border-radius: 8px; padding: 15px; margin-bottom: 20px; background: #fff; }
-        .table-header-tools { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-        .table-scroll { max-height: 350px; overflow-y: auto; border: 1px solid #dcdfe6; }
-        
-        table { width: 100%; border-collapse: collapse; table-layout: fixed; }
-        th { background: #f5f7fa; padding: 10px; border: 1px solid #dcdfe6; position: sticky; top: 0; color: #606266; font-size: 13px; z-index: 10; }
-        td { border: 1px solid #ebeef5; padding: 0; text-align: center; }
-        td input { width: 100%; height: 32px; border: none; text-align: center; font-size: 14px; outline: none; background: transparent; }
-        td input:focus { background: #ecf5ff; }
+        * { box-sizing: border-box; }
 
-        /* 控制面板 */
-        .control-panel { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px; margin-bottom: 20px; }
-        .control-group { background: #fafafa; padding: 15px; border-radius: 10px; border: 1px solid #eee; }
-        .control-group label { font-size: 13px; font-weight: bold; display: block; margin-bottom: 8px; color: #303133; }
+        body {
+            font-family: "Segoe UI", "Microsoft YaHei", sans-serif;
+            background-color: #f0f2f5;
+            margin: 0;
+            padding: 20px;
+            color: #303133;
+        }
 
-        /* 按钮样式 */
-        .btn-group { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px; }
-        .btn { padding: 10px 18px; border: none; border-radius: 6px; cursor: pointer; font-weight: 500; font-size: 13px; display: flex; align-items: center; gap: 6px; transition: 0.2s; }
-        .btn-purple { background: #8e44ad; color: white; box-shadow: 0 3px 6px rgba(142,68,173,0.3); } /* 粘贴按钮 */
+        .app-container {
+            max-width: 1380px;
+            margin: 0 auto;
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+        }
+
+        .table-section {
+            border: 2px solid #e4e7ed;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            background: #fff;
+        }
+
+        .table-header-tools {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+
+        .table-scroll {
+            max-height: 420px;
+            overflow: auto;
+            border: 1px solid #dcdfe6;
+            border-radius: 6px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+            background: #fff;
+        }
+
+        th {
+            background: #f5f7fa;
+            padding: 10px;
+            border: 1px solid #dcdfe6;
+            position: sticky;
+            top: 0;
+            color: #606266;
+            font-size: 13px;
+            z-index: 10;
+        }
+
+        td {
+            border: 1px solid #ebeef5;
+            padding: 0;
+            text-align: center;
+            background: #fff;
+        }
+
+        td input, td select {
+            width: 100%;
+            height: 34px;
+            border: none;
+            text-align: center;
+            font-size: 14px;
+            outline: none;
+            background: transparent;
+        }
+
+        td input:focus, td select:focus {
+            background: #ecf5ff;
+        }
+
+        td input.active-cell {
+            background: #d9ecff !important;
+            box-shadow: inset 0 0 0 2px #409eff;
+        }
+
+        .control-panel {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .control-group {
+            background: #fafafa;
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid #eee;
+        }
+
+        .control-group label.title {
+            font-size: 13px;
+            font-weight: bold;
+            display: block;
+            margin-bottom: 8px;
+            color: #303133;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+
+        .btn {
+            padding: 10px 18px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 13px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: 0.2s;
+            user-select: none;
+        }
+
+        .btn:hover {
+            opacity: 0.88;
+            transform: translateY(-1px);
+        }
+
+        .btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.6;
+            transform: none;
+        }
+
+        .btn-purple { background: #8e44ad; color: white; box-shadow: 0 3px 6px rgba(142,68,173,0.3); }
         .btn-primary { background: #409eff; color: white; }
         .btn-success { background: #67c23a; color: white; }
-        .btn-danger { background: #f56c6c; color: white; }
-        .btn-info { background: #909399; color: white; }
-        .btn-dark { background: #2f3542; color: white; }
-        .btn:hover { opacity: 0.8; transform: translateY(-1px); }
+        .btn-danger  { background: #f56c6c; color: white; }
+        .btn-info    { background: #909399; color: white; }
+        .btn-dark    { background: #2f3542; color: white; }
+        .btn-warning { background: #e6a23c; color: white; }
 
-        /* 图表容器 - 2D正方形逻辑 */
-        #plot-container { 
-            background: #fff; border: 1px solid #eee; border-radius: 10px; margin-top: 10px;
-            display: flex; justify-content: center; align-items: center; overflow: hidden;
-            width: 100%; height: 600px;
+        #plot-container {
+            background: #fff;
+            border: 1px solid #eee;
+            border-radius: 10px;
+            margin-top: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            width: 100%;
+            height: 620px;
+            transition: 0.2s;
         }
-        #plot-display { width: 100%; height: 100%; }
 
-        /* 2D 模式下的正方形约束 */
-        .square-mode { aspect-ratio: 1 / 1; width: 600px !important; height: 600px !important; margin: 0 auto; }
+        #plot-display {
+            width: 100%;
+            height: 100%;
+        }
+
+        .square-mode {
+            aspect-ratio: 1 / 1;
+            width: min(90vw, 700px) !important;
+            height: min(90vw, 700px) !important;
+            margin: 0 auto;
+        }
 
         .hidden { display: none !important; }
-        .tip { font-size: 12px; color: #909399; margin-top: 5px; }
+
+        .tip {
+            font-size: 12px;
+            color: #909399;
+            margin-top: 5px;
+            line-height: 1.5;
+        }
+
+        .inline-row {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .mini-input {
+            width: 70px;
+            padding: 6px 8px;
+            border: 1px solid #dcdfe6;
+            border-radius: 6px;
+            background: #fff;
+        }
+
+        .full-input, select, input[type="color"] {
+            padding: 6px 8px;
+            border: 1px solid #dcdfe6;
+            border-radius: 6px;
+            background: #fff;
+        }
+
+        .status-bar {
+            margin-top: 10px;
+            font-size: 12px;
+            color: #606266;
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .subtle-box {
+            background: #eef5fe;
+        }
+
+        .file-hidden {
+            display: none;
+        }
+
+        .legend-box {
+            margin-top: 10px;
+            font-size: 12px;
+            color: #606266;
+            line-height: 1.6;
+            background: #fafafa;
+            border: 1px dashed #dcdfe6;
+            padding: 10px 12px;
+            border-radius: 6px;
+        }
+
+        .legend-box code {
+            background: #f2f2f2;
+            padding: 1px 4px;
+            border-radius: 4px;
+        }
     </style>
 </head>
 <body>
-
 <div class="app-container">
     <header>
-        <h2 style="margin:0; color:#303133;">多维数据分析与插值工具 (3D/2D)</h2>
+        <h2 style="margin:0; color:#303133;">多维数据分析与插值工具 (3D / 2D) 增强版</h2>
     </header>
 
     <div class="table-section">
         <div class="table-header-tools">
-            <div style="display:flex; gap:10px; align-items:center;">
+            <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
                 <button class="btn btn-purple" onclick="manualPaste()">📋 一键粘贴 Excel 数据</button>
-                <span class="tip">支持直接 Ctrl+V 粘贴三列数据</span>
+                <button class="btn btn-success" onclick="document.getElementById('excelImportInput').click()">📥 导入 Excel</button>
+                <button class="btn btn-info" onclick="fillDemoData()">✨ 填充示例数据</button>
+                <span class="tip">
+                    支持从 Excel 复制后粘贴，也支持直接导入 Excel 文件。<br>
+                    可先点中任意一个单元格，再按 Ctrl+V，从该位置开始按区域一一对应粘贴。
+                </span>
             </div>
             <button class="btn btn-danger" onclick="clearTable()">🗑️ 清空表格</button>
         </div>
+
         <div class="table-scroll">
             <table id="inputTable">
                 <thead>
-                    <tr>
-                        <th style="width:50px">#</th>
-                        <th>变量 1: Speed (um/s)</th>
-                        <th>变量 2: Load (mN)</th>
-                        <th>变量 3: Area (um²)</th>
-                        <th style="width:120px">点颜色 (3D)</th>
-                    </tr>
+                <tr>
+                    <th style="width:50px">#</th>
+                    <th>变量 1: Speed (um/s)</th>
+                    <th>变量 2: Load (mN)</th>
+                    <th>变量 3: Area (um²)</th>
+                    <th style="width:180px">点颜色 (3D / 可导入导出)</th>
+                </tr>
                 </thead>
-                <tbody>
-                    </tbody>
+                <tbody></tbody>
             </table>
+        </div>
+
+        <div class="status-bar">
+            <span id="selectedCellInfo">当前粘贴起点：第 1 行，第 1 列</span>
+            <span id="dataCountInfo">有效数据点：0</span>
+        </div>
+
+        <div class="legend-box">
+            Excel 第四列颜色支持以下格式：<code>default</code>、中文名（如 <code>红</code>/<code>蓝</code>）、英文别名（如 <code>red</code>/<code>blue</code>）、十六进制颜色值（如 <code>#ff4d4f</code>）。<br>
+            导入 Excel 时，默认读取第一个工作表；前四列分别对应：变量1、变量2、变量3、颜色。
         </div>
     </div>
 
     <div class="control-panel">
-        <div class="control-group" style="background: #eef5fe;">
-            <label>🌐 绘图模式选择</label>
-            <div style="display:flex; gap:20px;">
-                <label style="font-weight:normal;"><input type="radio" name="plotMode" value="3d" checked onchange="toggleUI()"> 3D 散点曲面</label>
-                <label style="font-weight:normal;"><input type="radio" name="plotMode" value="2d" onchange="toggleUI()"> 2D 正方形等高线</label>
+        <div class="control-group subtle-box">
+            <label class="title">🌐 绘图模式选择</label>
+            <div class="inline-row">
+                <label style="font-weight:normal;">
+                    <input type="radio" name="plotMode" value="3d" checked onchange="toggleUI()" />
+                    3D 散点曲面
+                </label>
+                <label style="font-weight:normal;">
+                    <input type="radio" name="plotMode" value="2d" onchange="toggleUI()" />
+                    2D 平面图
+                </label>
             </div>
         </div>
 
         <div class="control-group" id="ui-3d-only">
-            <label>3D 设置</label>
-            <div style="display:flex; flex-direction:column; gap:8px;">
-                <label style="font-weight:normal;"><input type="checkbox" id="showSurface" checked onchange="updateChart()"> 显示插值趋势面</label>
-                <div style="display:flex; gap:5px">
-                    <select id="colorMode" style="flex:1" onchange="updateChart()">
+            <label class="title">3D 设置</label>
+            <div style="display:flex; flex-direction:column; gap:10px;">
+                <label style="font-weight:normal;">
+                    <input type="checkbox" id="showSurface" checked onchange="updateChart()" />
+                    显示插值趋势面
+                </label>
+                <div class="inline-row">
+                    <select id="colorMode" class="full-input" onchange="updateChart()">
                         <option value="perpoint">使用表格预设颜色</option>
                         <option value="zvalue">按 Z 轴数值映射颜色</option>
                     </select>
-                    <input type="color" id="baseColor" value="#409eff" onchange="updateChart()">
+                    <input type="color" id="baseColor" value="#409eff" onchange="updateChart()" title="默认点颜色" />
                 </div>
             </div>
         </div>
 
         <div class="control-group hidden" id="ui-2d-only">
-            <label>2D 等高线配置</label>
-            <div style="display:grid; grid-template-columns: 50px 1fr; gap:8px; align-items:center;">
-                <span style="font-size:12px">X轴:</span> <select id="selX" onchange="syncAxis()"></select>
-                <span style="font-size:12px">Y轴:</span> <select id="selY" onchange="syncAxis()"></select>
-                <span style="font-size:12px">映射:</span> <select id="selZ" disabled style="background:#eee"></select>
+            <label class="title">2D 配置</label>
+            <div style="display:grid; grid-template-columns: 60px 1fr; gap:8px; align-items:center;">
+                <span style="font-size:12px;">X轴:</span>
+                <select id="selX" class="full-input" onchange="syncAxis()"></select>
+
+                <span style="font-size:12px;">Y轴:</span>
+                <select id="selY" class="full-input" onchange="syncAxis()"></select>
+
+                <span style="font-size:12px;">映射:</span>
+                <select id="selZ" class="full-input" disabled style="background:#eee;"></select>
+
+                <span style="font-size:12px;">类型:</span>
+                <select id="plot2DType" class="full-input" onchange="updateChart()">
+                    <option value="contour">等高线图</option>
+                    <option value="heatmap">二维热力图</option>
+                </select>
             </div>
         </div>
 
         <div class="control-group">
-            <label>通用视觉控制</label>
-            <div style="display:flex; gap:10px; align-items:center;">
-                <span style="font-size:12px">点大小:</span><input type="number" id="ptSize" value="10" style="width:40px">
-                <span style="font-size:12px">透明度:</span><input type="number" id="opacity" value="0.8" step="0.1" min="0.1" max="1" style="width:40px">
-                <select id="colorScale" onchange="updateChart()">
+            <label class="title">通用视觉控制</label>
+            <div class="inline-row">
+                <span style="font-size:12px;">点大小:</span>
+                <input type="number" id="ptSize" class="mini-input" value="10" min="1" onchange="updateChart()" />
+
+                <span style="font-size:12px;">透明度:</span>
+                <input type="number" id="opacity" class="mini-input" value="0.8" step="0.1" min="0.1" max="1" onchange="updateChart()" />
+
+                <select id="colorScale" class="full-input" onchange="updateChart()">
                     <option value="Viridis">颜色: 翡翠 (Viridis)</option>
                     <option value="Plasma">颜色: 极光 (Plasma)</option>
                     <option value="Hot">颜色: 熔岩 (Hot)</option>
+                    <option value="Turbo">颜色: Turbo</option>
+                    <option value="Cividis">颜色: Cividis</option>
                 </select>
             </div>
         </div>
@@ -136,10 +380,11 @@
         <button class="btn btn-dark" onclick="toggleFullScreen()">🖥️ 全屏展示</button>
         <button class="btn btn-success" onclick="exportToExcel()">📊 导出 Excel</button>
         <button class="btn btn-warning" onclick="saveProject()">💾 保存项目</button>
-        <button class="btn btn-info" onclick="document.getElementById('fileInput').click()">📂 打开项目</button>
+        <button class="btn btn-info" onclick="document.getElementById('projectFileInput').click()">📂 打开项目</button>
     </div>
 
-    <input type="file" id="fileInput" accept=".3dvis" onchange="loadProject(event)">
+    <input type="file" id="projectFileInput" class="file-hidden" accept=".3dvis,.json" onchange="loadProject(event)" />
+    <input type="file" id="excelImportInput" class="file-hidden" accept=".xlsx,.xls,.csv" onchange="importExcelFile(event)" />
 
     <div id="plot-container">
         <div id="plot-display"></div>
@@ -149,214 +394,798 @@
 <script>
     const tableBody = document.querySelector('#inputTable tbody');
     const TOTAL_ROWS = 50;
+    const DATA_COLS = 3;
     const varNames = ['Speed (um/s)', 'Load (mN)', 'Area (um²)'];
-    const colors = [['默认', 'default'], ['红', '#ff4d4f'], ['蓝', '#1890ff'], ['绿', '#52c41a'], ['黄', '#faad14']];
 
-    // 初始化表格
+    const colors = [
+        ['默认', 'default'],
+        ['红', '#ff4d4f'],
+        ['蓝', '#1890ff'],
+        ['绿', '#52c41a'],
+        ['黄', '#faad14'],
+        ['紫', '#722ed1'],
+        ['黑', '#000000']
+    ];
+
+    const colorAliases = {
+        'default': 'default',
+        '默认': 'default',
+
+        '红': '#ff4d4f',
+        'red': '#ff4d4f',
+        '#ff4d4f': '#ff4d4f',
+
+        '蓝': '#1890ff',
+        'blue': '#1890ff',
+        '#1890ff': '#1890ff',
+
+        '绿': '#52c41a',
+        'green': '#52c41a',
+        '#52c41a': '#52c41a',
+
+        '黄': '#faad14',
+        'yellow': '#faad14',
+        '#faad14': '#faad14',
+
+        '紫': '#722ed1',
+        'purple': '#722ed1',
+        '#722ed1': '#722ed1',
+
+        '黑': '#000000',
+        'black': '#000000',
+        '#000000': '#000000'
+    };
+
+    let rotating = false;
+    let rotTimer = null;
+    let angle = 0;
+    let selectedCell = { row: 0, col: 0 };
+
+    function getPlotDiv() {
+        return document.getElementById('plot-display');
+    }
+
+    function updateSelectedCellInfo() {
+        document.getElementById('selectedCellInfo').textContent =
+            `当前粘贴起点：第 ${selectedCell.row + 1} 行，第 ${selectedCell.col + 1} 列`;
+    }
+
+    function setActiveCell(row, col) {
+        selectedCell = { row, col };
+        document.querySelectorAll('#inputTable tbody input').forEach(input => {
+            input.classList.remove('active-cell');
+        });
+        const target = document.getElementById(`r${row}c${col}`);
+        if (target) target.classList.add('active-cell');
+        updateSelectedCellInfo();
+    }
+
     function initTable() {
         tableBody.innerHTML = '';
         for (let i = 0; i < TOTAL_ROWS; i++) {
             const tr = document.createElement('tr');
-            tr.innerHTML = `<td>${i+1}</td>
-                <td><input type="text" id="r${i}c0"></td>
-                <td><input type="text" id="r${i}c1"></td>
-                <td><input type="text" id="r${i}c2"></td>
-                <td><select id="r${i}color"></select></td>`;
+            tr.innerHTML = `
+                <td>${i + 1}</td>
+                <td><input type="text" id="r${i}c0" data-row="${i}" data-col="0"></td>
+                <td><input type="text" id="r${i}c1" data-row="${i}" data-col="1"></td>
+                <td><input type="text" id="r${i}c2" data-row="${i}" data-col="2"></td>
+                <td><select id="r${i}color"></select></td>
+            `;
             const sel = tr.querySelector('select');
             colors.forEach(c => sel.add(new Option(c[0], c[1])));
+            sel.value = 'default';
             tableBody.appendChild(tr);
         }
+
+        bindCellEvents();
+        setActiveCell(0, 0);
     }
 
-    // 初始化 2D 轴选择
-    function initSelectors() {
-        const sx = document.getElementById('selX'), sy = document.getElementById('selY'), sz = document.getElementById('selZ');
-        varNames.forEach((n, i) => {
-            sx.add(new Option(n, i)); sy.add(new Option(n, i)); sz.add(new Option(n, i));
+    function bindCellEvents() {
+        document.querySelectorAll('#inputTable tbody input').forEach(input => {
+            input.addEventListener('focus', () => {
+                const row = Number(input.dataset.row);
+                const col = Number(input.dataset.col);
+                setActiveCell(row, col);
+            });
+
+            input.addEventListener('click', () => {
+                const row = Number(input.dataset.row);
+                const col = Number(input.dataset.col);
+                setActiveCell(row, col);
+            });
+
+            input.addEventListener('input', debounce(updateChart, 180));
         });
-        sx.value = 0; sy.value = 1; sz.value = 2;
+
+        document.querySelectorAll('#inputTable tbody select').forEach(select => {
+            select.addEventListener('change', updateChart);
+        });
+    }
+
+    function initSelectors() {
+        const sx = document.getElementById('selX');
+        const sy = document.getElementById('selY');
+        const sz = document.getElementById('selZ');
+
+        sx.innerHTML = '';
+        sy.innerHTML = '';
+        sz.innerHTML = '';
+
+        varNames.forEach((n, i) => {
+            sx.add(new Option(n, i));
+            sy.add(new Option(n, i));
+            sz.add(new Option(n, i));
+        });
+
+        sx.value = 0;
+        sy.value = 1;
+        sz.value = 2;
+    }
+
+    function normalizeColorValue(value) {
+        if (value === null || value === undefined) return 'default';
+
+        const raw = String(value).trim();
+        if (!raw) return 'default';
+
+        const lower = raw.toLowerCase();
+
+        if (colorAliases[raw] !== undefined) return colorAliases[raw];
+        if (colorAliases[lower] !== undefined) return colorAliases[lower];
+
+        if (/^#[0-9a-fA-F]{6}$/.test(raw)) return raw.toLowerCase();
+
+        return 'default';
+    }
+
+    function excelColorToStoredValue(value) {
+        return normalizeColorValue(value);
+    }
+
+    function storedColorToExcelValue(value) {
+        return value || 'default';
     }
 
     function syncAxis() {
-        const x = parseInt(document.getElementById('selX').value);
-        const y = parseInt(document.getElementById('selY').value);
-        if (x === y) document.getElementById('selY').value = (x + 1) % 3;
-        const newX = parseInt(document.getElementById('selX').value);
-        const newY = parseInt(document.getElementById('selY').value);
-        document.getElementById('selZ').value = [0,1,2].find(i => i!==newX && i!==newY);
+        const sx = document.getElementById('selX');
+        const sy = document.getElementById('selY');
+        const sz = document.getElementById('selZ');
+
+        let x = parseInt(sx.value, 10);
+        let y = parseInt(sy.value, 10);
+
+        if (x === y) {
+            y = (x + 1) % 3;
+            sy.value = y;
+        }
+
+        const z = [0, 1, 2].find(i => i !== x && i !== y);
+        sz.value = z;
         updateChart();
     }
 
-    // 核心粘贴功能
     async function manualPaste() {
         try {
             const text = await navigator.clipboard.readText();
-            doPaste(text);
-        } catch (e) { alert("无法读取剪贴板，请按 Ctrl+V 直接粘贴。"); }
+            doPaste(text, selectedCell.row, selectedCell.col);
+        } catch (e) {
+            alert('无法直接读取剪贴板。请在表格中点中起始单元格后按 Ctrl+V 粘贴。\\n\\n注意：某些浏览器仅在 HTTPS 或 localhost 环境允许读取剪贴板。');
+        }
     }
 
-    function doPaste(text) {
-        const rows = text.trim().split(/\r?\n/);
-        rows.forEach((row, i) => {
-            if (i < TOTAL_ROWS) {
-                const cols = row.split('\t');
-                cols.forEach((val, j) => {
-                    if (j < 3) document.getElementById(`r${i}c${j}`).value = val.trim();
-                });
-            }
+    function parseClipboardText(text) {
+        return text
+            .replace(/\r/g, '')
+            .trim()
+            .split('\n')
+            .map(row => row.split('\t'));
+    }
+
+    function doPaste(text, startRow = 0, startCol = 0) {
+        if (!text || !text.trim()) return;
+
+        const rows = parseClipboardText(text);
+
+        rows.forEach((cols, rOffset) => {
+            const r = startRow + rOffset;
+            if (r >= TOTAL_ROWS) return;
+
+            cols.forEach((val, cOffset) => {
+                const c = startCol + cOffset;
+
+                if (c < 3) {
+                    const cell = document.getElementById(`r${r}c${c}`);
+                    if (cell) cell.value = String(val).trim();
+                } else if (c === 3) {
+                    const colorCell = document.getElementById(`r${r}color`);
+                    if (colorCell) colorCell.value = excelColorToStoredValue(val);
+                }
+            });
         });
+
         updateChart();
     }
 
     document.addEventListener('paste', (e) => {
-        if (e.target.tagName === 'INPUT') return;
-        doPaste(e.clipboardData.getData('text'));
+        const target = e.target;
+        const tag = target.tagName;
+        const editable = target.isContentEditable;
+
+        if (tag === 'INPUT' && target.id && /^r\d+c\d+$/.test(target.id)) {
+            e.preventDefault();
+            const row = Number(target.dataset.row);
+            const col = Number(target.dataset.col);
+            setActiveCell(row, col);
+            doPaste(e.clipboardData.getData('text'), row, col);
+            return;
+        }
+
+        if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || editable) {
+            return;
+        }
+
+        e.preventDefault();
+        doPaste(e.clipboardData.getData('text'), selectedCell.row, selectedCell.col);
     });
 
-    // 插值算法 (IDW)
-    function interpolate(pts, idxs, res = 50) {
-        if (pts.length < 3) return null;
-        const x = pts.map(p => p[idxs.x]), y = pts.map(p => p[idxs.y]), z = pts.map(p => p[idxs.z]);
-        const xMin = Math.min(...x), xMax = Math.max(...x), yMin = Math.min(...y), yMax = Math.max(...y);
-        const gx = [], gy = [], gz = [];
-        for (let i=0; i<=res; i++) gx.push(xMin + (xMax-xMin)*(i/res)), gy.push(yMin + (yMax-yMin)*(i/res));
-        for (let j=0; j<=res; j++) {
-            const row = [];
-            for (let i=0; i<=res; i++) {
-                let num=0, den=0, hit=null;
-                for (let k=0; k<pts.length; k++) {
-                    const d = Math.sqrt((gx[i]-x[k])**2 + (gy[j]-y[k])**2);
-                    if (d < 0.0001) { hit=z[k]; break; }
-                    const w = 1/(d**2); num += z[k]*w; den += w;
-                }
-                row.push(hit !== null ? hit : num/den);
-            }
-            gz.push(row);
-        }
-        return { x: gx, y: gy, z: gz };
-    }
-
-    // 绘图
-    function updateChart() {
+    function getTableData() {
         const pts = [];
-        const rowCols = [];
-        for (let i=0; i<TOTAL_ROWS; i++) {
+        const rowColors = [];
+
+        for (let i = 0; i < TOTAL_ROWS; i++) {
             const v0 = parseFloat(document.getElementById(`r${i}c0`).value);
             const v1 = parseFloat(document.getElementById(`r${i}c1`).value);
             const v2 = parseFloat(document.getElementById(`r${i}c2`).value);
+
             if (!isNaN(v0) && !isNaN(v1) && !isNaN(v2)) {
-                pts.push([v0,v1,v2]);
-                rowCols.push(document.getElementById(`r${i}color`).value);
+                pts.push([v0, v1, v2]);
+                rowColors.push(document.getElementById(`r${i}color`).value);
             }
         }
-        if (pts.length === 0) return;
+
+        document.getElementById('dataCountInfo').textContent = `有效数据点：${pts.length}`;
+        return { pts, rowColors };
+    }
+
+    function interpolate(pts, idxs, res = 50) {
+        if (pts.length < 3) return null;
+
+        const x = pts.map(p => p[idxs.x]);
+        const y = pts.map(p => p[idxs.y]);
+        const z = pts.map(p => p[idxs.z]);
+
+        const xMin = Math.min(...x);
+        const xMax = Math.max(...x);
+        const yMin = Math.min(...y);
+        const yMax = Math.max(...y);
+
+        if (xMin === xMax || yMin === yMax) return null;
+
+        const gx = [];
+        const gy = [];
+        const gz = [];
+
+        for (let i = 0; i <= res; i++) {
+            gx.push(xMin + (xMax - xMin) * (i / res));
+            gy.push(yMin + (yMax - yMin) * (i / res));
+        }
+
+        for (let j = 0; j <= res; j++) {
+            const row = [];
+            for (let i = 0; i <= res; i++) {
+                let num = 0;
+                let den = 0;
+                let hit = null;
+
+                for (let k = 0; k < pts.length; k++) {
+                    const d = Math.sqrt((gx[i] - x[k]) ** 2 + (gy[j] - y[k]) ** 2);
+                    if (d < 0.0001) {
+                        hit = z[k];
+                        break;
+                    }
+                    const w = 1 / (d ** 2);
+                    num += z[k] * w;
+                    den += w;
+                }
+
+                row.push(hit !== null ? hit : (den === 0 ? null : num / den));
+            }
+            gz.push(row);
+        }
+
+        return { x: gx, y: gy, z: gz };
+    }
+
+    function updateChart() {
+        const { pts, rowColors } = getTableData();
+        const plotDiv = getPlotDiv();
+
+        if (pts.length === 0) {
+            Plotly.purge(plotDiv);
+            return;
+        }
 
         const mode = document.querySelector('input[name="plotMode"]:checked').value;
         const traces = [];
-        const commonAxis = { exponentformat: 'none', tickformat: '', automargin: true };
+
+        const pointSize = Number(document.getElementById('ptSize').value) || 10;
+        const opacity = Number(document.getElementById('opacity').value) || 0.8;
+        const colorScale = document.getElementById('colorScale').value;
+
+        const commonAxis = {
+            exponentformat: 'none',
+            tickformat: '',
+            automargin: true,
+            zeroline: false
+        };
+
+        let layout = {};
 
         if (mode === '3d') {
-            const baseC = document.getElementById('baseColor').value;
-            const finalCols = rowCols.map(c => c==='default' ? baseC : c);
-            traces.push({
-                x: pts.map(p=>p[0]), y: pts.map(p=>p[1]), z: pts.map(p=>p[2]),
-                type: 'scatter3d', mode: 'markers',
-                marker: { size: document.getElementById('ptSize').value, color: finalCols, opacity: 1 }
-            });
-            if (document.getElementById('showSurface').checked && pts.length >= 3) {
-                const surf = interpolate(pts, {x:0, y:1, z:2});
-                if (surf) traces.push({ x: surf.x, y: surf.y, z: surf.z, type: 'surface', opacity: document.getElementById('opacity').value, showscale: false });
+            const baseColor = document.getElementById('baseColor').value;
+            const colorMode = document.getElementById('colorMode').value;
+
+            const markerConfig = {
+                size: pointSize,
+                opacity: opacity
+            };
+
+            if (colorMode === 'zvalue') {
+                markerConfig.color = pts.map(p => p[2]);
+                markerConfig.colorscale = colorScale;
+                markerConfig.showscale = true;
+                markerConfig.colorbar = { title: varNames[2] };
+            } else {
+                markerConfig.color = rowColors.map(c => c === 'default' ? baseColor : c);
             }
-            var layout = { scene: { xaxis: {title: varNames[0], ...commonAxis}, yaxis: {title: varNames[1], ...commonAxis}, zaxis: {title: varNames[2], ...commonAxis} }, margin: {l:0,r:0,b:0,t:0} };
-        } else {
-            const ix = parseInt(document.getElementById('selX').value);
-            const iy = parseInt(document.getElementById('selY').value);
-            const iz = parseInt(document.getElementById('selZ').value);
-            const grid = interpolate(pts, {x:ix, y:iy, z:iz}, 60);
-            if (grid) traces.push({
-                x: grid.x, y: grid.y, z: grid.z, type: 'contour', 
-                colorscale: document.getElementById('colorScale').value, 
-                opacity: document.getElementById('opacity').value,
-                contours: { coloring: 'fill', showlines: true }
+
+            traces.push({
+                x: pts.map(p => p[0]),
+                y: pts.map(p => p[1]),
+                z: pts.map(p => p[2]),
+                type: 'scatter3d',
+                mode: 'markers',
+                marker: markerConfig,
+                name: '数据点'
             });
-            traces.push({ x: pts.map(p=>p[ix]), y: pts.map(p=>p[iy]), mode: 'markers', type: 'scatter', marker: {color:'#fff', line:{width:1, color:'#000'}} });
-            var layout = { xaxis: {title: varNames[ix], ...commonAxis}, yaxis: {title: varNames[iy], ...commonAxis} };
+
+            if (document.getElementById('showSurface').checked && pts.length >= 3) {
+                const surf = interpolate(pts, { x: 0, y: 1, z: 2 }, 60);
+                if (surf) {
+                    traces.push({
+                        x: surf.x,
+                        y: surf.y,
+                        z: surf.z,
+                        type: 'surface',
+                        opacity: opacity,
+                        colorscale: colorScale,
+                        showscale: false,
+                        name: '插值曲面',
+                        hoverinfo: 'x+y+z'
+                    });
+                }
+            }
+
+            layout = {
+                scene: {
+                    xaxis: { title: varNames[0], ...commonAxis },
+                    yaxis: { title: varNames[1], ...commonAxis },
+                    zaxis: { title: varNames[2], ...commonAxis }
+                },
+                margin: { l: 0, r: 0, b: 0, t: 0 },
+                legend: { orientation: 'h' }
+            };
+        } else {
+            const ix = parseInt(document.getElementById('selX').value, 10);
+            const iy = parseInt(document.getElementById('selY').value, 10);
+            const iz = parseInt(document.getElementById('selZ').value, 10);
+            const plot2DType = document.getElementById('plot2DType').value;
+
+            const grid = interpolate(pts, { x: ix, y: iy, z: iz }, 60);
+
+            if (grid) {
+                if (plot2DType === 'heatmap') {
+                    traces.push({
+                        x: grid.x,
+                        y: grid.y,
+                        z: grid.z,
+                        type: 'heatmap',
+                        colorscale: colorScale,
+                        opacity: opacity,
+                        colorbar: { title: varNames[iz] },
+                        name: '热力图'
+                    });
+                } else {
+                    traces.push({
+                        x: grid.x,
+                        y: grid.y,
+                        z: grid.z,
+                        type: 'contour',
+                        colorscale: colorScale,
+                        opacity: opacity,
+                        contours: { coloring: 'fill', showlines: true },
+                        colorbar: { title: varNames[iz] },
+                        name: '等高线'
+                    });
+                }
+            }
+
+            traces.push({
+                x: pts.map(p => p[ix]),
+                y: pts.map(p => p[iy]),
+                mode: 'markers',
+                type: 'scatter',
+                name: '原始点',
+                marker: {
+                    size: pointSize,
+                    color: '#ffffff',
+                    opacity: 1,
+                    line: { width: 1.2, color: '#000000' }
+                }
+            });
+
+            layout = {
+                xaxis: {
+                    title: varNames[ix],
+                    scaleanchor: 'y',
+                    scaleratio: 1,
+                    ...commonAxis
+                },
+                yaxis: {
+                    title: varNames[iy],
+                    ...commonAxis
+                },
+                margin: { l: 60, r: 30, b: 60, t: 30 }
+            };
         }
 
-        Plotly.newPlot('plot-display', traces, layout, {responsive:true, displaylogo:false});
+        Plotly.newPlot(plotDiv, traces, layout, {
+            responsive: true,
+            displaylogo: false
+        });
     }
 
     function toggleUI() {
         const mode = document.querySelector('input[name="plotMode"]:checked').value;
-        const is3D = (mode === '3d');
+        const is3D = mode === '3d';
+
         document.getElementById('ui-3d-only').classList.toggle('hidden', !is3D);
         document.getElementById('ui-2d-only').classList.toggle('hidden', is3D);
         document.getElementById('rotateBtn').disabled = !is3D;
         document.getElementById('plot-container').classList.toggle('square-mode', !is3D);
-        Plotly.Plots.resize('plot-display');
+
+        stopRotationIfNeeded(!is3D);
+
+        const plotDiv = getPlotDiv();
+        try {
+            Plotly.Plots.resize(plotDiv);
+        } catch (e) {}
+
         updateChart();
     }
 
-    // 旋转/导出/保存等... (保留原有功能)
-    let rotating = false, rotTimer = null, angle = 0;
     function toggleRotation() {
+        if (document.querySelector('input[name="plotMode"]:checked').value !== '3d') return;
+
         rotating = !rotating;
         const btn = document.getElementById('rotateBtn');
+
         if (rotating) {
-            btn.innerText = "🛑 停止旋转"; btn.style.background = "#f56c6c";
+            btn.innerText = '🛑 停止旋转';
+            btn.classList.remove('btn-info');
+            btn.classList.add('btn-danger');
+
             rotTimer = setInterval(() => {
                 angle += 0.015;
-                Plotly.relayout('plot-display', { 'scene.camera.eye': { x: 2*Math.cos(angle), y: 2*Math.sin(angle), z: 1.2 } });
+                Plotly.relayout(getPlotDiv(), {
+                    'scene.camera.eye': {
+                        x: 2 * Math.cos(angle),
+                        y: 2 * Math.sin(angle),
+                        z: 1.2
+                    }
+                });
             }, 40);
         } else {
-            btn.innerText = "🔄 3D 自动旋转"; btn.style.background = "#909399";
+            stopRotationIfNeeded(true);
+        }
+    }
+
+    function stopRotationIfNeeded(forceStop = false) {
+        if (forceStop && rotTimer) {
             clearInterval(rotTimer);
+            rotTimer = null;
+        }
+        if (forceStop) {
+            rotating = false;
+            const btn = document.getElementById('rotateBtn');
+            btn.innerText = '🔄 3D 自动旋转';
+            btn.classList.remove('btn-danger');
+            btn.classList.add('btn-info');
         }
     }
 
     function toggleFullScreen() {
         const p = document.getElementById('plot-container');
-        if (!document.fullscreenElement) p.requestFullscreen(); else document.exitFullscreen();
+        if (!document.fullscreenElement) {
+            p.requestFullscreen?.();
+        } else {
+            document.exitFullscreen?.();
+        }
     }
-    document.addEventListener('fullscreenchange', () => Plotly.Plots.resize('plot-display'));
+
+    document.addEventListener('fullscreenchange', () => {
+        try {
+            Plotly.Plots.resize(getPlotDiv());
+        } catch (e) {}
+    });
 
     function exportToExcel() {
-        const data = [["#", ...varNames]];
-        for (let i=0; i<TOTAL_ROWS; i++) {
-            const r = [document.getElementById(`r${i}c0`).value, document.getElementById(`r${i}c1`).value, document.getElementById(`r${i}c2`).value];
-            if (r.some(v => v)) data.push([i+1, ...r]);
+        const data = [['#', varNames[0], varNames[1], varNames[2], 'Color']];
+
+        for (let i = 0; i < TOTAL_ROWS; i++) {
+            const v0 = document.getElementById(`r${i}c0`).value;
+            const v1 = document.getElementById(`r${i}c1`).value;
+            const v2 = document.getElementById(`r${i}c2`).value;
+            const color = document.getElementById(`r${i}color`).value;
+
+            if ([v0, v1, v2].some(v => String(v).trim() !== '')) {
+                data.push([
+                    i + 1,
+                    v0,
+                    v1,
+                    v2,
+                    storedColorToExcelValue(color)
+                ]);
+            }
         }
-        XLSX.writeFile({SheetNames: ["Data"], Sheets: {"Data": XLSX.utils.aoa_to_sheet(data)}}, "Data_Export.xlsx");
+
+        const wb = XLSX.utils.book_new();
+        const ws = XLSX.utils.aoa_to_sheet(data);
+
+        ws['!cols'] = [
+            { wch: 8 },
+            { wch: 18 },
+            { wch: 18 },
+            { wch: 18 },
+            { wch: 18 }
+        ];
+
+        XLSX.utils.book_append_sheet(wb, ws, 'Data');
+        XLSX.writeFile(wb, 'Data_Export.xlsx');
+    }
+
+    function importExcelFile(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+
+        reader.onload = function(e) {
+            try {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const firstSheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[firstSheetName];
+
+                const sheetData = XLSX.utils.sheet_to_json(worksheet, {
+                    header: 1,
+                    defval: ''
+                });
+
+                if (!sheetData || sheetData.length === 0) {
+                    alert('Excel 文件没有可读取的数据。');
+                    return;
+                }
+
+                applyExcelData(sheetData);
+            } catch (err) {
+                console.error(err);
+                alert('Excel 导入失败，请确认文件格式正确。');
+            } finally {
+                event.target.value = '';
+            }
+        };
+
+        reader.readAsArrayBuffer(file);
+    }
+
+    function applyExcelData(sheetData) {
+        const startRowIndex = detectExcelDataStartRow(sheetData);
+        const rows = sheetData.slice(startRowIndex);
+
+        initTable();
+
+        let filled = 0;
+
+        for (let i = 0; i < rows.length && i < TOTAL_ROWS; i++) {
+            const row = rows[i];
+
+            const v0 = row[0] ?? '';
+            const v1 = row[1] ?? '';
+            const v2 = row[2] ?? '';
+            const c  = row[3] ?? '';
+
+            document.getElementById(`r${i}c0`).value = valueToCellString(v0);
+            document.getElementById(`r${i}c1`).value = valueToCellString(v1);
+            document.getElementById(`r${i}c2`).value = valueToCellString(v2);
+            document.getElementById(`r${i}color`).value = excelColorToStoredValue(c);
+
+            if ([v0, v1, v2].some(v => String(v).trim() !== '')) {
+                filled++;
+            }
+        }
+
+        updateChart();
+        alert(`Excel 导入完成，共填入 ${filled} 行数据。`);
+    }
+
+    function detectExcelDataStartRow(sheetData) {
+        if (sheetData.length === 0) return 0;
+
+        const firstRow = sheetData[0] || [];
+        const normalized = firstRow.map(v => String(v).trim().toLowerCase());
+
+        const headerKeywords = [
+            '#', 'index',
+            'speed (um/s)', 'load (mn)', 'area (um²)', 'area (um2)',
+            'color', '点颜色'
+        ];
+
+        const hitCount = normalized.filter(cell => headerKeywords.includes(cell)).length;
+        return hitCount >= 2 ? 1 : 0;
+    }
+
+    function valueToCellString(v) {
+        if (v === null || v === undefined) return '';
+        return String(v).trim();
+    }
+
+    function getProjectState() {
+        const table = Array.from({ length: TOTAL_ROWS }, (_, i) => ({
+            v0: document.getElementById(`r${i}c0`).value,
+            v1: document.getElementById(`r${i}c1`).value,
+            v2: document.getElementById(`r${i}c2`).value,
+            c: document.getElementById(`r${i}color`).value
+        }));
+
+        return {
+            version: '2.0',
+            table,
+            settings: {
+                plotMode: document.querySelector('input[name="plotMode"]:checked').value,
+                showSurface: document.getElementById('showSurface').checked,
+                colorMode: document.getElementById('colorMode').value,
+                baseColor: document.getElementById('baseColor').value,
+                selX: document.getElementById('selX').value,
+                selY: document.getElementById('selY').value,
+                selZ: document.getElementById('selZ').value,
+                plot2DType: document.getElementById('plot2DType').value,
+                ptSize: document.getElementById('ptSize').value,
+                opacity: document.getElementById('opacity').value,
+                colorScale: document.getElementById('colorScale').value
+            }
+        };
     }
 
     function saveProject() {
-        const table = Array.from({length: TOTAL_ROWS}, (_, i) => ({
-            v0: document.getElementById(`r${i}c0`).value, v1: document.getElementById(`r${i}c1`).value, 
-            v2: document.getElementById(`r${i}c2`).value, c: document.getElementById(`r${i}color`).value
-        }));
-        const blob = new Blob([JSON.stringify(table)], {type: 'application/json'});
-        const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `Project_${Date.now()}.3dvis`; a.click();
+        const project = getProjectState();
+        const blob = new Blob([JSON.stringify(project, null, 2)], { type: 'application/json' });
+        const a = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        a.href = url;
+        a.download = `Project_${Date.now()}.3dvis`;
+        a.click();
+        URL.revokeObjectURL(url);
+    }
+
+    function applyProjectState(project) {
+        if (!project) return;
+
+        const table = Array.isArray(project.table)
+            ? project.table
+            : Array.isArray(project)
+                ? project
+                : [];
+
+        const settings = project.settings || {};
+
+        initTable();
+
+        table.forEach((r, i) => {
+            if (i >= TOTAL_ROWS) return;
+
+            document.getElementById(`r${i}c0`).value = r?.v0 ?? '';
+            document.getElementById(`r${i}c1`).value = r?.v1 ?? '';
+            document.getElementById(`r${i}c2`).value = r?.v2 ?? '';
+            document.getElementById(`r${i}color`).value = excelColorToStoredValue(r?.c);
+        });
+
+        if (settings.plotMode) {
+            const radio = document.querySelector(`input[name="plotMode"][value="${settings.plotMode}"]`);
+            if (radio) radio.checked = true;
+        }
+
+        if (typeof settings.showSurface !== 'undefined') {
+            document.getElementById('showSurface').checked = !!settings.showSurface;
+        }
+
+        if (settings.colorMode) document.getElementById('colorMode').value = settings.colorMode;
+        if (settings.baseColor) document.getElementById('baseColor').value = settings.baseColor;
+        if (settings.selX !== undefined) document.getElementById('selX').value = settings.selX;
+        if (settings.selY !== undefined) document.getElementById('selY').value = settings.selY;
+        if (settings.selZ !== undefined) document.getElementById('selZ').value = settings.selZ;
+        if (settings.plot2DType) document.getElementById('plot2DType').value = settings.plot2DType;
+        if (settings.ptSize) document.getElementById('ptSize').value = settings.ptSize;
+        if (settings.opacity) document.getElementById('opacity').value = settings.opacity;
+        if (settings.colorScale) document.getElementById('colorScale').value = settings.colorScale;
+
+        toggleUI();
+        updateChart();
     }
 
     function loadProject(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
         const reader = new FileReader();
         reader.onload = (ev) => {
-            const data = JSON.parse(ev.target.result);
-            data.forEach((r, i) => {
-                if (i < TOTAL_ROWS) {
-                    document.getElementById(`r${i}c0`).value = r.v0; document.getElementById(`r${i}c1`).value = r.v1;
-                    document.getElementById(`r${i}c2`).value = r.v2; document.getElementById(`r${i}color`).value = r.c;
-                }
-            });
-            updateChart();
+            try {
+                const data = JSON.parse(ev.target.result);
+                applyProjectState(data);
+            } catch (err) {
+                console.error(err);
+                alert('项目文件格式错误，无法打开。');
+            } finally {
+                e.target.value = '';
+            }
         };
-        reader.readAsText(e.target.files[0]);
+        reader.readAsText(file);
     }
 
-    function clearTable() { if(confirm('确定清空所有数据吗？')) { initTable(); Plotly.purge('plot-display'); } }
+    function clearTable() {
+        if (!confirm('确定清空所有数据吗？')) return;
+        stopRotationIfNeeded(true);
+        initTable();
+        Plotly.purge(getPlotDiv());
+        updateChart();
+    }
+
+    function fillDemoData() {
+        const demo = [
+            [10, 5, 120, '#ff4d4f'],
+            [15, 10, 180, '#1890ff'],
+            [20, 15, 260, '#52c41a'],
+            [25, 20, 350, '#faad14'],
+            [30, 25, 470, '#722ed1'],
+            [12, 22, 240, 'default'],
+            [18, 8, 160, '#000000'],
+            [28, 12, 310, '#1890ff']
+        ];
+
+        initTable();
+
+        demo.forEach((row, i) => {
+            document.getElementById(`r${i}c0`).value = row[0];
+            document.getElementById(`r${i}c1`).value = row[1];
+            document.getElementById(`r${i}c2`).value = row[2];
+            document.getElementById(`r${i}color`).value = excelColorToStoredValue(row[3]);
+        });
+
+        updateChart();
+    }
+
+    function debounce(fn, wait = 150) {
+        let timer = null;
+        return function (...args) {
+            clearTimeout(timer);
+            timer = setTimeout(() => fn.apply(this, args), wait);
+        };
+    }
 
     initTable();
     initSelectors();
+    toggleUI();
 </script>
 </body>
 </html>
