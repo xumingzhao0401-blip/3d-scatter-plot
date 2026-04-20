@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Ultimate 3D/2D Data Analysis Tool - Enhanced</title>
+    <title>多维数据分析与拟合工具（4变量版）</title>
     <script src="https://cdn.plot.ly/plotly-2.24.1.min.js"></script>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
     <style>
@@ -18,7 +18,7 @@
         }
 
         .app-container {
-            max-width: 1380px;
+            max-width: 1520px;
             margin: 0 auto;
             background: white;
             padding: 25px;
@@ -51,7 +51,7 @@
         }
 
         .table-scroll {
-            max-height: 420px;
+            max-height: 430px;
             overflow: auto;
             border: 1px solid #dcdfe6;
             border-radius: 6px;
@@ -103,7 +103,7 @@
 
         .control-panel {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(330px, 1fr));
             gap: 15px;
             margin-bottom: 20px;
         }
@@ -173,7 +173,7 @@
             align-items: center;
             overflow: hidden;
             width: 100%;
-            height: 620px;
+            height: 640px;
             transition: 0.2s;
         }
 
@@ -184,8 +184,8 @@
 
         .square-mode {
             aspect-ratio: 1 / 1;
-            width: min(90vw, 700px) !important;
-            height: min(90vw, 700px) !important;
+            width: min(92vw, 760px) !important;
+            height: min(92vw, 760px) !important;
             margin: 0 auto;
         }
 
@@ -254,12 +254,112 @@
             padding: 1px 4px;
             border-radius: 4px;
         }
+
+        .slider-row {
+            display: grid;
+            grid-template-columns: 85px 1fr 70px;
+            gap: 10px;
+            align-items: center;
+            margin-top: 8px;
+        }
+
+        .slider-row input[type="range"] {
+            width: 100%;
+        }
+
+        .mini-tag {
+            background: #f4f4f5;
+            border: 1px solid #e4e7ed;
+            border-radius: 4px;
+            padding: 2px 6px;
+            font-size: 12px;
+            color: #606266;
+        }
+
+        .axis-grid {
+            display: grid;
+            grid-template-columns: 85px 1fr;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .tab-bar {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #ebeef5;
+            padding-bottom: 6px;
+        }
+
+        .tab-btn {
+            padding: 10px 16px;
+            border: none;
+            border-radius: 8px 8px 0 0;
+            background: #e4e7ed;
+            cursor: pointer;
+            font-weight: 600;
+            color: #606266;
+        }
+
+        .tab-btn.active {
+            background: #409eff;
+            color: #fff;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .fit-layout {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .fit-panel,
+        .fit-result-box,
+        .fit-plot-box {
+            background: #fafafa;
+            border: 1px solid #eee;
+            border-radius: 10px;
+            padding: 15px;
+        }
+
+        .fit-plot-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+
+        .fit-plot {
+            width: 100%;
+            height: 430px;
+        }
+
+        .result-table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+            background: #fff;
+        }
+
+        .result-table th,
+        .result-table td {
+            border: 1px solid #dcdfe6;
+            padding: 8px;
+            text-align: center;
+            font-size: 13px;
+        }
     </style>
 </head>
 <body>
 <div class="app-container">
     <header>
-        <h2 style="margin:0; color:#303133;">多维数据分析与插值工具 (3D / 2D) 增强版</h2>
+        <h2 style="margin:0; color:#303133;">多维数据分析与拟合工具（4变量版）</h2>
     </header>
 
     <div class="table-section">
@@ -284,6 +384,7 @@
                     <th>变量 1: Speed (um/s)</th>
                     <th>变量 2: Load (mN)</th>
                     <th>变量 3: Area (um²)</th>
+                    <th>变量 4: 临界磨损压强 (MPa)</th>
                     <th style="width:180px">点颜色 (3D / 可导入导出)</th>
                 </tr>
                 </thead>
@@ -297,105 +398,235 @@
         </div>
 
         <div class="legend-box">
-            Excel 第四列颜色支持以下格式：<code>default</code>、中文名（如 <code>红</code>/<code>蓝</code>）、英文别名（如 <code>red</code>/<code>blue</code>）、十六进制颜色值（如 <code>#ff4d4f</code>）。<br>
-            导入 Excel 时，默认读取第一个工作表；前四列分别对应：变量1、变量2、变量3、颜色。
+            Excel 颜色列支持：<code>default</code>、中文名（如 <code>红</code>/<code>蓝</code>）、英文别名（如 <code>red</code>/<code>blue</code>）、十六进制颜色值（如 <code>#ff4d4f</code>）。<br>
+            导入 Excel 时，默认读取第一个工作表；前五列分别对应：变量1、变量2、变量3、变量4、颜色。旧工程文件（只有三变量）也兼容。
         </div>
     </div>
 
-    <div class="control-panel">
-        <div class="control-group subtle-box">
-            <label class="title">🌐 绘图模式选择</label>
-            <div class="inline-row">
-                <label style="font-weight:normal;">
-                    <input type="radio" name="plotMode" value="3d" checked onchange="toggleUI()" />
-                    3D 散点曲面
-                </label>
-                <label style="font-weight:normal;">
-                    <input type="radio" name="plotMode" value="2d" onchange="toggleUI()" />
-                    2D 平面图
-                </label>
-            </div>
-        </div>
+    <div class="tab-bar">
+        <button class="tab-btn active" id="tabBtnPlot" onclick="switchTab('plotTab')">原始绘图</button>
+        <button class="tab-btn" id="tabBtnFit" onclick="switchTab('fitTab')">拟合分析</button>
+    </div>
 
-        <div class="control-group" id="ui-3d-only">
-            <label class="title">3D 设置</label>
-            <div style="display:flex; flex-direction:column; gap:10px;">
-                <label style="font-weight:normal;">
-                    <input type="checkbox" id="showSurface" checked onchange="updateChart()" />
-                    显示插值趋势面
-                </label>
+    <div id="plotTab" class="tab-content active">
+        <div class="control-panel">
+            <div class="control-group subtle-box">
+                <label class="title">🌐 绘图模式选择</label>
                 <div class="inline-row">
-                    <select id="colorMode" class="full-input" onchange="updateChart()">
-                        <option value="perpoint">使用表格预设颜色</option>
-                        <option value="zvalue">按 Z 轴数值映射颜色</option>
+                    <label style="font-weight:normal;">
+                        <input type="radio" name="plotMode" value="3d" checked onchange="toggleUI()" />
+                        3D 散点曲面
+                    </label>
+                    <label style="font-weight:normal;">
+                        <input type="radio" name="plotMode" value="2d" onchange="toggleUI()" />
+                        2D 平面图
+                    </label>
+                </div>
+            </div>
+
+            <div class="control-group" id="ui-3d-only">
+                <label class="title">3D 配置</label>
+
+                <div class="axis-grid">
+                    <span style="font-size:12px;">X轴:</span>
+                    <select id="sel3DX" class="full-input" onchange="syncAxis3D()"></select>
+
+                    <span style="font-size:12px;">Y轴:</span>
+                    <select id="sel3DY" class="full-input" onchange="syncAxis3D()"></select>
+
+                    <span style="font-size:12px;">Z轴:</span>
+                    <select id="sel3DZ" class="full-input" onchange="syncAxis3D()"></select>
+                </div>
+
+                <div style="margin-top:10px; display:flex; flex-direction:column; gap:10px;">
+                    <label style="font-weight:normal;">
+                        <input type="checkbox" id="showSurface" checked onchange="updateChart()" />
+                        显示插值趋势面
+                    </label>
+                    <div class="inline-row">
+                        <select id="colorMode" class="full-input" onchange="updateChart()">
+                            <option value="perpoint">使用表格预设颜色</option>
+                            <option value="zvalue">按 Z 轴数值映射颜色</option>
+                        </select>
+                        <input type="color" id="baseColor" value="#409eff" onchange="updateChart()" title="默认点颜色" />
+                    </div>
+                </div>
+            </div>
+
+            <div class="control-group hidden" id="ui-2d-only">
+                <label class="title">2D 配置</label>
+
+                <div class="axis-grid">
+                    <span style="font-size:12px;">X轴:</span>
+                    <select id="sel2DX" class="full-input" onchange="syncAxis2D()"></select>
+
+                    <span style="font-size:12px;">Y轴:</span>
+                    <select id="sel2DY" class="full-input" onchange="syncAxis2D()"></select>
+
+                    <span style="font-size:12px;">映射:</span>
+                    <select id="sel2DZ" class="full-input" onchange="syncAxis2D()"></select>
+
+                    <span style="font-size:12px;">类型:</span>
+                    <select id="plot2DType" class="full-input" onchange="updateChart()">
+                        <option value="contour">等高线图</option>
+                        <option value="heatmap">二维热力图</option>
                     </select>
-                    <input type="color" id="baseColor" value="#409eff" onchange="updateChart()" title="默认点颜色" />
+                </div>
+
+                <div class="slider-row">
+                    <span style="font-size:12px;">X范围</span>
+                    <input type="range" id="xScale2D" min="50" max="200" step="1" value="100" oninput="updateScaleLabels(); updateChart()">
+                    <span id="xScale2DLabel" class="mini-tag">100%</span>
+                </div>
+
+                <div class="slider-row">
+                    <span style="font-size:12px;">Y范围</span>
+                    <input type="range" id="yScale2D" min="50" max="200" step="1" value="100" oninput="updateScaleLabels(); updateChart()">
+                    <span id="yScale2DLabel" class="mini-tag">100%</span>
+                </div>
+
+                <div class="tip">
+                    100% 为数据原始范围；小于 100% 表示放大局部；大于 100% 表示扩大视野。
+                </div>
+            </div>
+
+            <div class="control-group">
+                <label class="title">通用视觉控制</label>
+                <div class="inline-row">
+                    <span style="font-size:12px;">点大小:</span>
+                    <input type="number" id="ptSize" class="mini-input" value="10" min="1" onchange="updateChart()" />
+
+                    <span style="font-size:12px;">透明度:</span>
+                    <input type="number" id="opacity" class="mini-input" value="0.8" step="0.1" min="0.1" max="1" onchange="updateChart()" />
+
+                    <select id="colorScale" class="full-input" onchange="updateChart()">
+                        <option value="Viridis">颜色: 翡翠 (Viridis)</option>
+                        <option value="Plasma">颜色: 极光 (Plasma)</option>
+                        <option value="Hot">颜色: 熔岩 (Hot)</option>
+                        <option value="Turbo">颜色: Turbo</option>
+                        <option value="Cividis">颜色: Cividis</option>
+                    </select>
                 </div>
             </div>
         </div>
 
-        <div class="control-group hidden" id="ui-2d-only">
-            <label class="title">2D 配置</label>
-            <div style="display:grid; grid-template-columns: 60px 1fr; gap:8px; align-items:center;">
-                <span style="font-size:12px;">X轴:</span>
-                <select id="selX" class="full-input" onchange="syncAxis()"></select>
-
-                <span style="font-size:12px;">Y轴:</span>
-                <select id="selY" class="full-input" onchange="syncAxis()"></select>
-
-                <span style="font-size:12px;">映射:</span>
-                <select id="selZ" class="full-input" disabled style="background:#eee;"></select>
-
-                <span style="font-size:12px;">类型:</span>
-                <select id="plot2DType" class="full-input" onchange="updateChart()">
-                    <option value="contour">等高线图</option>
-                    <option value="heatmap">二维热力图</option>
-                </select>
-            </div>
+        <div class="btn-group">
+            <button class="btn btn-primary" onclick="updateChart()">⚡ 刷新图表</button>
+            <button class="btn btn-info" id="rotateBtn" onclick="toggleRotation()">🔄 3D 自动旋转</button>
+            <button class="btn btn-dark" onclick="toggleFullScreen()">🖥️ 全屏展示</button>
+            <button class="btn btn-success" onclick="exportToExcel()">📊 导出 Excel</button>
+            <button class="btn btn-warning" onclick="saveProject()">💾 保存项目</button>
+            <button class="btn btn-info" onclick="document.getElementById('projectFileInput').click()">📂 打开项目</button>
         </div>
 
-        <div class="control-group">
-            <label class="title">通用视觉控制</label>
-            <div class="inline-row">
-                <span style="font-size:12px;">点大小:</span>
-                <input type="number" id="ptSize" class="mini-input" value="10" min="1" onchange="updateChart()" />
-
-                <span style="font-size:12px;">透明度:</span>
-                <input type="number" id="opacity" class="mini-input" value="0.8" step="0.1" min="0.1" max="1" onchange="updateChart()" />
-
-                <select id="colorScale" class="full-input" onchange="updateChart()">
-                    <option value="Viridis">颜色: 翡翠 (Viridis)</option>
-                    <option value="Plasma">颜色: 极光 (Plasma)</option>
-                    <option value="Hot">颜色: 熔岩 (Hot)</option>
-                    <option value="Turbo">颜色: Turbo</option>
-                    <option value="Cividis">颜色: Cividis</option>
-                </select>
-            </div>
+        <div id="plot-container">
+            <div id="plot-display"></div>
         </div>
     </div>
 
-    <div class="btn-group">
-        <button class="btn btn-primary" onclick="updateChart()">⚡ 刷新图表</button>
-        <button class="btn btn-info" id="rotateBtn" onclick="toggleRotation()">🔄 3D 自动旋转</button>
-        <button class="btn btn-dark" onclick="toggleFullScreen()">🖥️ 全屏展示</button>
-        <button class="btn btn-success" onclick="exportToExcel()">📊 导出 Excel</button>
-        <button class="btn btn-warning" onclick="saveProject()">💾 保存项目</button>
-        <button class="btn btn-info" onclick="document.getElementById('projectFileInput').click()">📂 打开项目</button>
+    <div id="fitTab" class="tab-content hidden">
+        <div class="fit-layout">
+            <div class="fit-panel">
+                <h3 style="margin-top:0;">拟合变量与模型选择</h3>
+
+                <div class="axis-grid">
+                    <span>拟合 X：</span>
+                    <select id="fitX" class="full-input"></select>
+
+                    <span>拟合 Y：</span>
+                    <select id="fitY" class="full-input"></select>
+
+                    <span>目标 Z：</span>
+                    <select id="fitZ" class="full-input"></select>
+
+                    <span>拟合模型：</span>
+                    <select id="fitModel" class="full-input">
+                        <option value="linear">线性平面拟合</option>
+                        <option value="quadratic">二次响应面拟合</option>
+                    </select>
+                </div>
+
+                <div class="tip" style="margin-top:10px;">
+                    建议默认：X=Speed，Y=Load，Z=临界磨损压强 (MPa)
+                </div>
+            </div>
+
+            <div class="fit-panel">
+                <h3 style="margin-top:0;">拟合操作</h3>
+                <div class="btn-group">
+                    <button class="btn btn-primary" onclick="runFit()">执行拟合</button>
+                    <button class="btn btn-info" onclick="compareFits()">模型对比</button>
+                    <button class="btn btn-warning" onclick="clearFitResults()">清空结果</button>
+                </div>
+            </div>
+
+            <div class="fit-result-box">
+                <h3 style="margin-top:0;">拟合公式</h3>
+                <div id="fitEquation">尚未拟合</div>
+            </div>
+
+            <div class="fit-result-box">
+                <h3 style="margin-top:0;">拟合参数</h3>
+                <table id="fitCoefTable" class="result-table">
+                    <thead>
+                        <tr>
+                            <th>参数</th>
+                            <th>数值</th>
+                            <th>解释</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+
+            <div class="fit-result-box">
+                <h3 style="margin-top:0;">拟合优度</h3>
+                <div id="fitMetrics">尚未拟合</div>
+            </div>
+
+            <div class="fit-result-box">
+                <h3 style="margin-top:0;">模型对比</h3>
+                <div id="fitCompareTable">尚未对比</div>
+            </div>
+
+            <div class="fit-result-box">
+                <h3 style="margin-top:0;">自动解释</h3>
+                <div id="fitInterpretation">尚未拟合</div>
+            </div>
+
+            <div class="fit-result-box">
+                <h3 style="margin-top:0;">实验建议</h3>
+                <div id="fitSuggestion">尚未生成</div>
+            </div>
+
+            <div class="fit-plot-grid">
+                <div class="fit-plot-box">
+                    <h3 style="margin-top:0;">3D 拟合曲面</h3>
+                    <div id="fitPlot3D" class="fit-plot"></div>
+                </div>
+
+                <div class="fit-plot-box">
+                    <h3 style="margin-top:0;">2D 拟合等高线</h3>
+                    <div id="fitPlot2D" class="fit-plot"></div>
+                </div>
+
+                <div class="fit-plot-box">
+                    <h3 style="margin-top:0;">残差图</h3>
+                    <div id="fitResidualPlot" class="fit-plot"></div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <input type="file" id="projectFileInput" class="file-hidden" accept=".3dvis,.json" onchange="loadProject(event)" />
     <input type="file" id="excelImportInput" class="file-hidden" accept=".xlsx,.xls,.csv" onchange="importExcelFile(event)" />
-
-    <div id="plot-container">
-        <div id="plot-display"></div>
-    </div>
 </div>
 
 <script>
     const tableBody = document.querySelector('#inputTable tbody');
     const TOTAL_ROWS = 50;
-    const DATA_COLS = 3;
-    const varNames = ['Speed (um/s)', 'Load (mN)', 'Area (um²)'];
+    const DATA_COLS = 4;
+    const varNames = ['Speed (um/s)', 'Load (mN)', 'Area (um²)', '临界磨损压强 (MPa)'];
 
     const colors = [
         ['默认', 'default'],
@@ -441,6 +672,28 @@
     let angle = 0;
     let selectedCell = { row: 0, col: 0 };
 
+    const fitState = {
+        xIndex: 0,
+        yIndex: 1,
+        zIndex: 3,
+        model: 'linear',
+        data: [],
+        fitted: false,
+        result: {
+            equation: '',
+            coefficients: [],
+            r2: null,
+            rmse: null,
+            n: 0,
+            predictions: [],
+            residuals: [],
+            grid: { x: [], y: [], z: [] },
+            stationaryPoint: null,
+            interpretation: '',
+            suggestion: ''
+        }
+    };
+
     function getPlotDiv() {
         return document.getElementById('plot-display');
     }
@@ -469,6 +722,7 @@
                 <td><input type="text" id="r${i}c0" data-row="${i}" data-col="0"></td>
                 <td><input type="text" id="r${i}c1" data-row="${i}" data-col="1"></td>
                 <td><input type="text" id="r${i}c2" data-row="${i}" data-col="2"></td>
+                <td><input type="text" id="r${i}c3" data-row="${i}" data-col="3"></td>
                 <td><select id="r${i}color"></select></td>
             `;
             const sel = tr.querySelector('select');
@@ -504,23 +758,41 @@
     }
 
     function initSelectors() {
-        const sx = document.getElementById('selX');
-        const sy = document.getElementById('selY');
-        const sz = document.getElementById('selZ');
-
-        sx.innerHTML = '';
-        sy.innerHTML = '';
-        sz.innerHTML = '';
-
-        varNames.forEach((n, i) => {
-            sx.add(new Option(n, i));
-            sy.add(new Option(n, i));
-            sz.add(new Option(n, i));
+        const ids = ['sel3DX', 'sel3DY', 'sel3DZ', 'sel2DX', 'sel2DY', 'sel2DZ'];
+        ids.forEach(id => {
+            const el = document.getElementById(id);
+            el.innerHTML = '';
+            varNames.forEach((n, i) => el.add(new Option(n, i)));
         });
 
-        sx.value = 0;
-        sy.value = 1;
-        sz.value = 2;
+        document.getElementById('sel3DX').value = 0;
+        document.getElementById('sel3DY').value = 1;
+        document.getElementById('sel3DZ').value = 3;
+
+        document.getElementById('sel2DX').value = 0;
+        document.getElementById('sel2DY').value = 1;
+        document.getElementById('sel2DZ').value = 3;
+    }
+
+    function initFitSelectors() {
+        const ids = ['fitX', 'fitY', 'fitZ'];
+        ids.forEach(id => {
+            const el = document.getElementById(id);
+            el.innerHTML = '';
+            varNames.forEach((name, idx) => {
+                el.add(new Option(name, idx));
+            });
+        });
+
+        document.getElementById('fitX').value = 0;
+        document.getElementById('fitY').value = 1;
+        document.getElementById('fitZ').value = 3;
+    }
+
+    function refreshFitSelectors() {
+        if (!document.getElementById('fitX').options.length) {
+            initFitSelectors();
+        }
     }
 
     function normalizeColorValue(value) {
@@ -547,22 +819,72 @@
         return value || 'default';
     }
 
-    function syncAxis() {
-        const sx = document.getElementById('selX');
-        const sy = document.getElementById('selY');
-        const sz = document.getElementById('selZ');
+    function ensureUniqueSelection(xId, yId, zId) {
+        const xEl = document.getElementById(xId);
+        const yEl = document.getElementById(yId);
+        const zEl = document.getElementById(zId);
 
-        let x = parseInt(sx.value, 10);
-        let y = parseInt(sy.value, 10);
+        let x = Number(xEl.value);
+        let y = Number(yEl.value);
+        let z = Number(zEl.value);
 
         if (x === y) {
-            y = (x + 1) % 3;
-            sy.value = y;
+            y = (x + 1) % DATA_COLS;
+            yEl.value = y;
         }
 
-        const z = [0, 1, 2].find(i => i !== x && i !== y);
-        sz.value = z;
+        x = Number(xEl.value);
+        y = Number(yEl.value);
+        z = Number(zEl.value);
+
+        if (z === x || z === y) {
+            const candidate = [0, 1, 2, 3].find(i => i !== x && i !== y);
+            zEl.value = candidate;
+        }
+    }
+
+    function syncAxis3D() {
+        ensureUniqueSelection('sel3DX', 'sel3DY', 'sel3DZ');
         updateChart();
+    }
+
+    function syncAxis2D() {
+        ensureUniqueSelection('sel2DX', 'sel2DY', 'sel2DZ');
+        updateChart();
+    }
+
+    function updateScaleLabels() {
+        document.getElementById('xScale2DLabel').textContent = `${document.getElementById('xScale2D').value}%`;
+        document.getElementById('yScale2DLabel').textContent = `${document.getElementById('yScale2D').value}%`;
+    }
+
+    function switchTab(tabId) {
+        document.querySelectorAll('.tab-content').forEach(el => {
+            el.classList.remove('active');
+            el.classList.add('hidden');
+        });
+
+        document.querySelectorAll('.tab-btn').forEach(el => {
+            el.classList.remove('active');
+        });
+
+        document.getElementById(tabId).classList.remove('hidden');
+        document.getElementById(tabId).classList.add('active');
+
+        if (tabId === 'plotTab') {
+            document.getElementById('tabBtnPlot').classList.add('active');
+            try {
+                Plotly.Plots.resize(document.getElementById('plot-display'));
+            } catch (e) {}
+        } else if (tabId === 'fitTab') {
+            document.getElementById('tabBtnFit').classList.add('active');
+            refreshFitSelectors();
+            try {
+                Plotly.Plots.resize(document.getElementById('fitPlot3D'));
+                Plotly.Plots.resize(document.getElementById('fitPlot2D'));
+                Plotly.Plots.resize(document.getElementById('fitResidualPlot'));
+            } catch (e) {}
+        }
     }
 
     async function manualPaste() {
@@ -570,7 +892,7 @@
             const text = await navigator.clipboard.readText();
             doPaste(text, selectedCell.row, selectedCell.col);
         } catch (e) {
-            alert('无法直接读取剪贴板。请在表格中点中起始单元格后按 Ctrl+V 粘贴。\\n\\n注意：某些浏览器仅在 HTTPS 或 localhost 环境允许读取剪贴板。');
+            alert('无法直接读取剪贴板。请在表格中点中起始单元格后按 Ctrl+V 粘贴。\n\n注意：某些浏览器仅在 HTTPS 或 localhost 环境允许读取剪贴板。');
         }
     }
 
@@ -594,10 +916,10 @@
             cols.forEach((val, cOffset) => {
                 const c = startCol + cOffset;
 
-                if (c < 3) {
+                if (c < DATA_COLS) {
                     const cell = document.getElementById(`r${r}c${c}`);
                     if (cell) cell.value = String(val).trim();
-                } else if (c === 3) {
+                } else if (c === DATA_COLS) {
                     const colorCell = document.getElementById(`r${r}color`);
                     if (colorCell) colorCell.value = excelColorToStoredValue(val);
                 }
@@ -629,23 +951,24 @@
         doPaste(e.clipboardData.getData('text'), selectedCell.row, selectedCell.col);
     });
 
-    function getTableData() {
-        const pts = [];
+    function getValidRowsForSelected(xIdx, yIdx, zIdx) {
+        const rows = [];
         const rowColors = [];
 
         for (let i = 0; i < TOTAL_ROWS; i++) {
-            const v0 = parseFloat(document.getElementById(`r${i}c0`).value);
-            const v1 = parseFloat(document.getElementById(`r${i}c1`).value);
-            const v2 = parseFloat(document.getElementById(`r${i}c2`).value);
+            const values = [];
+            for (let j = 0; j < DATA_COLS; j++) {
+                values.push(parseFloat(document.getElementById(`r${i}c${j}`).value));
+            }
 
-            if (!isNaN(v0) && !isNaN(v1) && !isNaN(v2)) {
-                pts.push([v0, v1, v2]);
+            if (!isNaN(values[xIdx]) && !isNaN(values[yIdx]) && !isNaN(values[zIdx])) {
+                rows.push(values);
                 rowColors.push(document.getElementById(`r${i}color`).value);
             }
         }
 
-        document.getElementById('dataCountInfo').textContent = `有效数据点：${pts.length}`;
-        return { pts, rowColors };
+        document.getElementById('dataCountInfo').textContent = `有效数据点：${rows.length}`;
+        return { rows, rowColors };
     }
 
     function interpolate(pts, idxs, res = 50) {
@@ -697,21 +1020,26 @@
         return { x: gx, y: gy, z: gz };
     }
 
+    function getScaledRange(min, max, scalePercent) {
+        if (min === max) return [min - 1, max + 1];
+
+        const scale = scalePercent / 100;
+        const center = (min + max) / 2;
+        const half = (max - min) / 2;
+        const scaledHalf = half * scale;
+
+        return [center - scaledHalf, center + scaledHalf];
+    }
+
     function updateChart() {
-        const { pts, rowColors } = getTableData();
         const plotDiv = getPlotDiv();
-
-        if (pts.length === 0) {
-            Plotly.purge(plotDiv);
-            return;
-        }
-
-        const mode = document.querySelector('input[name="plotMode"]:checked').value;
-        const traces = [];
 
         const pointSize = Number(document.getElementById('ptSize').value) || 10;
         const opacity = Number(document.getElementById('opacity').value) || 0.8;
         const colorScale = document.getElementById('colorScale').value;
+
+        const mode = document.querySelector('input[name="plotMode"]:checked').value;
+        const traces = [];
 
         const commonAxis = {
             exponentformat: 'none',
@@ -723,6 +1051,17 @@
         let layout = {};
 
         if (mode === '3d') {
+            const xIdx = Number(document.getElementById('sel3DX').value);
+            const yIdx = Number(document.getElementById('sel3DY').value);
+            const zIdx = Number(document.getElementById('sel3DZ').value);
+
+            const { rows, rowColors } = getValidRowsForSelected(xIdx, yIdx, zIdx);
+
+            if (rows.length === 0) {
+                Plotly.purge(plotDiv);
+                return;
+            }
+
             const baseColor = document.getElementById('baseColor').value;
             const colorMode = document.getElementById('colorMode').value;
 
@@ -732,26 +1071,26 @@
             };
 
             if (colorMode === 'zvalue') {
-                markerConfig.color = pts.map(p => p[2]);
+                markerConfig.color = rows.map(p => p[zIdx]);
                 markerConfig.colorscale = colorScale;
                 markerConfig.showscale = true;
-                markerConfig.colorbar = { title: varNames[2] };
+                markerConfig.colorbar = { title: varNames[zIdx] };
             } else {
                 markerConfig.color = rowColors.map(c => c === 'default' ? baseColor : c);
             }
 
             traces.push({
-                x: pts.map(p => p[0]),
-                y: pts.map(p => p[1]),
-                z: pts.map(p => p[2]),
+                x: rows.map(p => p[xIdx]),
+                y: rows.map(p => p[yIdx]),
+                z: rows.map(p => p[zIdx]),
                 type: 'scatter3d',
                 mode: 'markers',
                 marker: markerConfig,
                 name: '数据点'
             });
 
-            if (document.getElementById('showSurface').checked && pts.length >= 3) {
-                const surf = interpolate(pts, { x: 0, y: 1, z: 2 }, 60);
+            if (document.getElementById('showSurface').checked && rows.length >= 3) {
+                const surf = interpolate(rows, { x: xIdx, y: yIdx, z: zIdx }, 60);
                 if (surf) {
                     traces.push({
                         x: surf.x,
@@ -769,20 +1108,27 @@
 
             layout = {
                 scene: {
-                    xaxis: { title: varNames[0], ...commonAxis },
-                    yaxis: { title: varNames[1], ...commonAxis },
-                    zaxis: { title: varNames[2], ...commonAxis }
+                    xaxis: { title: varNames[xIdx], ...commonAxis },
+                    yaxis: { title: varNames[yIdx], ...commonAxis },
+                    zaxis: { title: varNames[zIdx], ...commonAxis }
                 },
                 margin: { l: 0, r: 0, b: 0, t: 0 },
                 legend: { orientation: 'h' }
             };
         } else {
-            const ix = parseInt(document.getElementById('selX').value, 10);
-            const iy = parseInt(document.getElementById('selY').value, 10);
-            const iz = parseInt(document.getElementById('selZ').value, 10);
-            const plot2DType = document.getElementById('plot2DType').value;
+            const xIdx = Number(document.getElementById('sel2DX').value);
+            const yIdx = Number(document.getElementById('sel2DY').value);
+            const zIdx = Number(document.getElementById('sel2DZ').value);
 
-            const grid = interpolate(pts, { x: ix, y: iy, z: iz }, 60);
+            const { rows } = getValidRowsForSelected(xIdx, yIdx, zIdx);
+
+            if (rows.length === 0) {
+                Plotly.purge(plotDiv);
+                return;
+            }
+
+            const plot2DType = document.getElementById('plot2DType').value;
+            const grid = interpolate(rows, { x: xIdx, y: yIdx, z: zIdx }, 60);
 
             if (grid) {
                 if (plot2DType === 'heatmap') {
@@ -793,7 +1139,7 @@
                         type: 'heatmap',
                         colorscale: colorScale,
                         opacity: opacity,
-                        colorbar: { title: varNames[iz] },
+                        colorbar: { title: varNames[zIdx] },
                         name: '热力图'
                     });
                 } else {
@@ -805,15 +1151,29 @@
                         colorscale: colorScale,
                         opacity: opacity,
                         contours: { coloring: 'fill', showlines: true },
-                        colorbar: { title: varNames[iz] },
+                        colorbar: { title: varNames[zIdx] },
                         name: '等高线'
                     });
                 }
             }
 
+            const xValues = rows.map(p => p[xIdx]);
+            const yValues = rows.map(p => p[yIdx]);
+
+            const xMin = Math.min(...xValues);
+            const xMax = Math.max(...xValues);
+            const yMin = Math.min(...yValues);
+            const yMax = Math.max(...yValues);
+
+            const xScale = Number(document.getElementById('xScale2D').value);
+            const yScale = Number(document.getElementById('yScale2D').value);
+
+            const xRange = getScaledRange(xMin, xMax, xScale);
+            const yRange = getScaledRange(yMin, yMax, yScale);
+
             traces.push({
-                x: pts.map(p => p[ix]),
-                y: pts.map(p => p[iy]),
+                x: xValues,
+                y: yValues,
                 mode: 'markers',
                 type: 'scatter',
                 name: '原始点',
@@ -827,13 +1187,13 @@
 
             layout = {
                 xaxis: {
-                    title: varNames[ix],
-                    scaleanchor: 'y',
-                    scaleratio: 1,
+                    title: varNames[xIdx],
+                    range: xRange,
                     ...commonAxis
                 },
                 yaxis: {
-                    title: varNames[iy],
+                    title: varNames[yIdx],
+                    range: yRange,
                     ...commonAxis
                 },
                 margin: { l: 60, r: 30, b: 60, t: 30 }
@@ -921,20 +1281,22 @@
     });
 
     function exportToExcel() {
-        const data = [['#', varNames[0], varNames[1], varNames[2], 'Color']];
+        const data = [['#', varNames[0], varNames[1], varNames[2], varNames[3], 'Color']];
 
         for (let i = 0; i < TOTAL_ROWS; i++) {
             const v0 = document.getElementById(`r${i}c0`).value;
             const v1 = document.getElementById(`r${i}c1`).value;
             const v2 = document.getElementById(`r${i}c2`).value;
+            const v3 = document.getElementById(`r${i}c3`).value;
             const color = document.getElementById(`r${i}color`).value;
 
-            if ([v0, v1, v2].some(v => String(v).trim() !== '')) {
+            if ([v0, v1, v2, v3].some(v => String(v).trim() !== '')) {
                 data.push([
                     i + 1,
                     v0,
                     v1,
                     v2,
+                    v3,
                     storedColorToExcelValue(color)
                 ]);
             }
@@ -948,6 +1310,7 @@
             { wch: 18 },
             { wch: 18 },
             { wch: 18 },
+            { wch: 22 },
             { wch: 18 }
         ];
 
@@ -1001,17 +1364,27 @@
         for (let i = 0; i < rows.length && i < TOTAL_ROWS; i++) {
             const row = rows[i];
 
-            const v0 = row[0] ?? '';
-            const v1 = row[1] ?? '';
-            const v2 = row[2] ?? '';
-            const c  = row[3] ?? '';
+            let offset = 0;
+            const first = String(row[0] ?? '').trim();
+            const second = String(row[1] ?? '').trim();
+
+            if (/^\d+$/.test(first) && second !== '') {
+                offset = 1;
+            }
+
+            const v0 = row[offset + 0] ?? '';
+            const v1 = row[offset + 1] ?? '';
+            const v2 = row[offset + 2] ?? '';
+            const v3 = row[offset + 3] ?? '';
+            const c  = row[offset + 4] ?? '';
 
             document.getElementById(`r${i}c0`).value = valueToCellString(v0);
             document.getElementById(`r${i}c1`).value = valueToCellString(v1);
             document.getElementById(`r${i}c2`).value = valueToCellString(v2);
+            document.getElementById(`r${i}c3`).value = valueToCellString(v3);
             document.getElementById(`r${i}color`).value = excelColorToStoredValue(c);
 
-            if ([v0, v1, v2].some(v => String(v).trim() !== '')) {
+            if ([v0, v1, v2, v3].some(v => String(v).trim() !== '')) {
                 filled++;
             }
         }
@@ -1029,6 +1402,7 @@
         const headerKeywords = [
             '#', 'index',
             'speed (um/s)', 'load (mn)', 'area (um²)', 'area (um2)',
+            '临界磨损压强 (mpa)', '临界磨损压强', 'critical wear pressure (mpa)',
             'color', '点颜色'
         ];
 
@@ -1046,24 +1420,39 @@
             v0: document.getElementById(`r${i}c0`).value,
             v1: document.getElementById(`r${i}c1`).value,
             v2: document.getElementById(`r${i}c2`).value,
+            v3: document.getElementById(`r${i}c3`).value,
             c: document.getElementById(`r${i}color`).value
         }));
 
         return {
-            version: '2.0',
+            version: '4.0',
             table,
             settings: {
                 plotMode: document.querySelector('input[name="plotMode"]:checked').value,
                 showSurface: document.getElementById('showSurface').checked,
                 colorMode: document.getElementById('colorMode').value,
                 baseColor: document.getElementById('baseColor').value,
-                selX: document.getElementById('selX').value,
-                selY: document.getElementById('selY').value,
-                selZ: document.getElementById('selZ').value,
+
+                sel3DX: document.getElementById('sel3DX').value,
+                sel3DY: document.getElementById('sel3DY').value,
+                sel3DZ: document.getElementById('sel3DZ').value,
+
+                sel2DX: document.getElementById('sel2DX').value,
+                sel2DY: document.getElementById('sel2DY').value,
+                sel2DZ: document.getElementById('sel2DZ').value,
+
                 plot2DType: document.getElementById('plot2DType').value,
+                xScale2D: document.getElementById('xScale2D').value,
+                yScale2D: document.getElementById('yScale2D').value,
+
                 ptSize: document.getElementById('ptSize').value,
                 opacity: document.getElementById('opacity').value,
-                colorScale: document.getElementById('colorScale').value
+                colorScale: document.getElementById('colorScale').value,
+
+                fitX: document.getElementById('fitX').value,
+                fitY: document.getElementById('fitY').value,
+                fitZ: document.getElementById('fitZ').value,
+                fitModel: document.getElementById('fitModel').value
             }
         };
     }
@@ -1098,6 +1487,7 @@
             document.getElementById(`r${i}c0`).value = r?.v0 ?? '';
             document.getElementById(`r${i}c1`).value = r?.v1 ?? '';
             document.getElementById(`r${i}c2`).value = r?.v2 ?? '';
+            document.getElementById(`r${i}c3`).value = r?.v3 ?? '';
             document.getElementById(`r${i}color`).value = excelColorToStoredValue(r?.c);
         });
 
@@ -1112,14 +1502,36 @@
 
         if (settings.colorMode) document.getElementById('colorMode').value = settings.colorMode;
         if (settings.baseColor) document.getElementById('baseColor').value = settings.baseColor;
-        if (settings.selX !== undefined) document.getElementById('selX').value = settings.selX;
-        if (settings.selY !== undefined) document.getElementById('selY').value = settings.selY;
-        if (settings.selZ !== undefined) document.getElementById('selZ').value = settings.selZ;
+
+        if (settings.sel3DX !== undefined) document.getElementById('sel3DX').value = settings.sel3DX;
+        if (settings.sel3DY !== undefined) document.getElementById('sel3DY').value = settings.sel3DY;
+        if (settings.sel3DZ !== undefined) document.getElementById('sel3DZ').value = settings.sel3DZ;
+
+        if (settings.sel2DX !== undefined) document.getElementById('sel2DX').value = settings.sel2DX;
+        else if (settings.selX !== undefined) document.getElementById('sel2DX').value = settings.selX;
+
+        if (settings.sel2DY !== undefined) document.getElementById('sel2DY').value = settings.sel2DY;
+        else if (settings.selY !== undefined) document.getElementById('sel2DY').value = settings.selY;
+
+        if (settings.sel2DZ !== undefined) document.getElementById('sel2DZ').value = settings.sel2DZ;
+        else if (settings.selZ !== undefined) document.getElementById('sel2DZ').value = settings.selZ;
+
         if (settings.plot2DType) document.getElementById('plot2DType').value = settings.plot2DType;
+        if (settings.xScale2D) document.getElementById('xScale2D').value = settings.xScale2D;
+        if (settings.yScale2D) document.getElementById('yScale2D').value = settings.yScale2D;
+
         if (settings.ptSize) document.getElementById('ptSize').value = settings.ptSize;
         if (settings.opacity) document.getElementById('opacity').value = settings.opacity;
         if (settings.colorScale) document.getElementById('colorScale').value = settings.colorScale;
 
+        if (settings.fitX !== undefined) document.getElementById('fitX').value = settings.fitX;
+        if (settings.fitY !== undefined) document.getElementById('fitY').value = settings.fitY;
+        if (settings.fitZ !== undefined) document.getElementById('fitZ').value = settings.fitZ;
+        if (settings.fitModel !== undefined) document.getElementById('fitModel').value = settings.fitModel;
+
+        updateScaleLabels();
+        syncAxis3D();
+        syncAxis2D();
         toggleUI();
         updateChart();
     }
@@ -1147,20 +1559,21 @@
         if (!confirm('确定清空所有数据吗？')) return;
         stopRotationIfNeeded(true);
         initTable();
+        clearFitResults();
         Plotly.purge(getPlotDiv());
         updateChart();
     }
 
     function fillDemoData() {
         const demo = [
-            [10, 5, 120, '#ff4d4f'],
-            [15, 10, 180, '#1890ff'],
-            [20, 15, 260, '#52c41a'],
-            [25, 20, 350, '#faad14'],
-            [30, 25, 470, '#722ed1'],
-            [12, 22, 240, 'default'],
-            [18, 8, 160, '#000000'],
-            [28, 12, 310, '#1890ff']
+            [10, 5, 120, 1.8, '#ff4d4f'],
+            [15, 10, 180, 2.1, '#1890ff'],
+            [20, 15, 260, 2.5, '#52c41a'],
+            [25, 20, 350, 2.9, '#faad14'],
+            [30, 25, 470, 3.2, '#722ed1'],
+            [12, 22, 240, 2.4, 'default'],
+            [18, 8, 160, 2.0, '#000000'],
+            [28, 12, 310, 2.7, '#1890ff']
         ];
 
         initTable();
@@ -1169,7 +1582,8 @@
             document.getElementById(`r${i}c0`).value = row[0];
             document.getElementById(`r${i}c1`).value = row[1];
             document.getElementById(`r${i}c2`).value = row[2];
-            document.getElementById(`r${i}color`).value = excelColorToStoredValue(row[3]);
+            document.getElementById(`r${i}c3`).value = row[3];
+            document.getElementById(`r${i}color`).value = excelColorToStoredValue(row[4]);
         });
 
         updateChart();
@@ -1183,9 +1597,553 @@
         };
     }
 
+    // ========== 拟合分析 ==========
+    function createFitResult() {
+        return {
+            equation: '',
+            coefficients: [],
+            r2: null,
+            rmse: null,
+            n: 0,
+            predictions: [],
+            residuals: [],
+            grid: { x: [], y: [], z: [] },
+            stationaryPoint: null,
+            interpretation: '',
+            suggestion: ''
+        };
+    }
+
+    function getFitData(xIdx, yIdx, zIdx) {
+        const rows = [];
+
+        for (let i = 0; i < TOTAL_ROWS; i++) {
+            const values = [];
+            for (let j = 0; j < DATA_COLS; j++) {
+                values.push(parseFloat(document.getElementById(`r${i}c${j}`).value));
+            }
+
+            if (!isNaN(values[xIdx]) && !isNaN(values[yIdx]) && !isNaN(values[zIdx])) {
+                rows.push({
+                    x: values[xIdx],
+                    y: values[yIdx],
+                    z: values[zIdx]
+                });
+            }
+        }
+
+        return rows;
+    }
+
+    function solveLinearSystem(A, b) {
+        const n = A.length;
+        const M = A.map((row, i) => [...row, b[i]]);
+
+        for (let i = 0; i < n; i++) {
+            let maxRow = i;
+            for (let k = i + 1; k < n; k++) {
+                if (Math.abs(M[k][i]) > Math.abs(M[maxRow][i])) {
+                    maxRow = k;
+                }
+            }
+            [M[i], M[maxRow]] = [M[maxRow], M[i]];
+
+            if (Math.abs(M[i][i]) < 1e-12) {
+                throw new Error('矩阵不可逆，无法拟合。');
+            }
+
+            for (let k = i + 1; k < n; k++) {
+                const factor = M[k][i] / M[i][i];
+                for (let j = i; j <= n; j++) {
+                    M[k][j] -= factor * M[i][j];
+                }
+            }
+        }
+
+        const x = new Array(n).fill(0);
+        for (let i = n - 1; i >= 0; i--) {
+            let sum = M[i][n];
+            for (let j = i + 1; j < n; j++) {
+                sum -= M[i][j] * x[j];
+            }
+            x[i] = sum / M[i][i];
+        }
+
+        return x;
+    }
+
+    function normalEquation(designMatrix, target) {
+        const cols = designMatrix[0].length;
+        const XtX = Array.from({ length: cols }, () => Array(cols).fill(0));
+        const Xty = Array(cols).fill(0);
+
+        for (let i = 0; i < designMatrix.length; i++) {
+            const row = designMatrix[i];
+            for (let j = 0; j < cols; j++) {
+                Xty[j] += row[j] * target[i];
+                for (let k = 0; k < cols; k++) {
+                    XtX[j][k] += row[j] * row[k];
+                }
+            }
+        }
+
+        return { XtX, Xty };
+    }
+
+    function computeR2(observed, predicted) {
+        const mean = observed.reduce((a, b) => a + b, 0) / observed.length;
+        const ssTot = observed.reduce((sum, v) => sum + Math.pow(v - mean, 2), 0);
+        const ssRes = observed.reduce((sum, v, i) => sum + Math.pow(v - predicted[i], 2), 0);
+        if (ssTot === 0) return 1;
+        return 1 - ssRes / ssTot;
+    }
+
+    function computeRMSE(observed, predicted) {
+        const mse = observed.reduce((sum, v, i) => sum + Math.pow(v - predicted[i], 2), 0) / observed.length;
+        return Math.sqrt(mse);
+    }
+
+    function generateFitGrid(data, predictFn, resolution = 50) {
+        const xVals = data.map(d => d.x);
+        const yVals = data.map(d => d.y);
+
+        const xMin = Math.min(...xVals);
+        const xMax = Math.max(...xVals);
+        const yMin = Math.min(...yVals);
+        const yMax = Math.max(...yVals);
+
+        if (xMin === xMax || yMin === yMax) {
+            return { x: [], y: [], z: [] };
+        }
+
+        const xGrid = [];
+        const yGrid = [];
+        const zGrid = [];
+
+        for (let i = 0; i <= resolution; i++) {
+            xGrid.push(xMin + (xMax - xMin) * i / resolution);
+            yGrid.push(yMin + (yMax - yMin) * i / resolution);
+        }
+
+        for (let j = 0; j <= resolution; j++) {
+            const row = [];
+            for (let i = 0; i <= resolution; i++) {
+                row.push(predictFn(xGrid[i], yGrid[j]));
+            }
+            zGrid.push(row);
+        }
+
+        return { x: xGrid, y: yGrid, z: zGrid };
+    }
+
+    function buildLinearInterpretation(b, c) {
+        const xText = b > 0 ? '正向' : (b < 0 ? '负向' : '不明显');
+        const yText = c > 0 ? '正向' : (c < 0 ? '负向' : '不明显');
+
+        return `
+            线性平面拟合显示，X 变量对目标值呈 <b>${xText}</b> 影响，Y 变量对目标值呈 <b>${yText}</b> 影响。<br>
+            该模型适合用于判断整体趋势方向，但对弯曲趋势和交互效应的描述能力有限。
+        `;
+    }
+
+    function buildQuadraticInterpretation(b, c, d, e, f) {
+        const xText = b > 0 ? '正向' : (b < 0 ? '负向' : '不明显');
+        const yText = c > 0 ? '正向' : (c < 0 ? '负向' : '不明显');
+        const interaction = d > 0 ? '正向协同' : (d < 0 ? '负向耦合' : '交互不明显');
+
+        let curveText = '二次项影响不明显';
+        if (e < 0 || f < 0) curveText = '高参数区可能存在趋缓或平台趋势';
+        if (e > 0 || f > 0) curveText = '局部可能存在加速上升趋势';
+
+        return `
+            二次响应面拟合表明，X 变量影响为 <b>${xText}</b>，Y 变量影响为 <b>${yText}</b>，X-Y 交互作用表现为 <b>${interaction}</b>。<br>
+            从二次项来看，<b>${curveText}</b>。
+        `;
+    }
+
+    function buildLinearSuggestion(result) {
+        if (result.r2 >= 0.8) {
+            return `线性模型已经能够较好描述整体趋势。建议先重点考察高参数边界区域，判断是否仍持续上升。`;
+        }
+        return `线性模型对数据的解释能力有限，建议进一步使用二次响应面模型观察是否存在曲率变化或交互效应。`;
+    }
+
+    function buildQuadraticSuggestion(result) {
+        if (result.stationaryPoint) {
+            return `当前数据范围内检测到一个 <b>${result.stationaryPoint.type}</b> 型驻点，可重点在其附近加密采样，验证该特征是否真实存在。`;
+        }
+
+        if (result.r2 >= 0.8) {
+            return `当前范围内未发现可靠内部极值点，建议继续向高速度、高载荷区域补点，以判断是否出现平台或边界失稳。`;
+        }
+
+        return `当前二次模型拟合能力仍有限，建议在残差较大的区域增加重复实验或补充采样点，以提高趋势判断可靠性。`;
+    }
+
+    function fitLinearModel(data) {
+        const X = data.map(d => [1, d.x, d.y]);
+        const y = data.map(d => d.z);
+
+        const { XtX, Xty } = normalEquation(X, y);
+        const [a, b, c] = solveLinearSystem(XtX, Xty);
+
+        const predictFn = (x, yv) => a + b * x + c * yv;
+        const predictions = data.map(d => predictFn(d.x, d.y));
+        const residuals = data.map((d, i) => d.z - predictions[i]);
+
+        const result = createFitResult();
+        result.equation = `z = ${a.toFixed(6)} + ${b.toFixed(6)}x + ${c.toFixed(6)}y`;
+        result.coefficients = [
+            { name: 'a', value: a, meaning: '截距' },
+            { name: 'b', value: b, meaning: 'X 一次项' },
+            { name: 'c', value: c, meaning: 'Y 一次项' }
+        ];
+        result.r2 = computeR2(y, predictions);
+        result.rmse = computeRMSE(y, predictions);
+        result.n = data.length;
+        result.predictions = predictions;
+        result.residuals = residuals;
+        result.grid = generateFitGrid(data, predictFn, 50);
+        result.stationaryPoint = null;
+        result.interpretation = buildLinearInterpretation(b, c);
+        result.suggestion = buildLinearSuggestion(result);
+
+        return result;
+    }
+
+    function findStationaryPointQuadratic(b, c, d, e, f, data) {
+        const det = 4 * e * f - d * d;
+        if (Math.abs(det) < 1e-12) return null;
+
+        const x = (d * c - 2 * f * b) / det;
+        const y = (d * b - 2 * e * c) / det;
+
+        const xVals = data.map(item => item.x);
+        const yVals = data.map(item => item.y);
+
+        const xMin = Math.min(...xVals);
+        const xMax = Math.max(...xVals);
+        const yMin = Math.min(...yVals);
+        const yMax = Math.max(...yVals);
+
+        if (x < xMin || x > xMax || y < yMin || y > yMax) {
+            return null;
+        }
+
+        const hessianDet = 4 * e * f - d * d;
+        let type = 'saddle';
+        if (hessianDet > 0 && e < 0) type = 'maximum';
+        if (hessianDet > 0 && e > 0) type = 'minimum';
+
+        return { x, y, type };
+    }
+
+    function fitQuadraticModel(data) {
+        const X = data.map(d => [1, d.x, d.y, d.x * d.y, d.x * d.x, d.y * d.y]);
+        const y = data.map(d => d.z);
+
+        const { XtX, Xty } = normalEquation(X, y);
+        const [a, b, c, d, e, f] = solveLinearSystem(XtX, Xty);
+
+        const predictFn = (x, yv) => a + b * x + c * yv + d * x * yv + e * x * x + f * yv * yv;
+        const predictions = data.map(item => predictFn(item.x, item.y));
+        const residuals = data.map((item, i) => item.z - predictions[i]);
+
+        const result = createFitResult();
+        result.equation = `z = ${a.toFixed(6)} + ${b.toFixed(6)}x + ${c.toFixed(6)}y + ${d.toFixed(6)}xy + ${e.toFixed(6)}x² + ${f.toFixed(6)}y²`;
+        result.coefficients = [
+            { name: 'a', value: a, meaning: '截距' },
+            { name: 'b', value: b, meaning: 'X 一次项' },
+            { name: 'c', value: c, meaning: 'Y 一次项' },
+            { name: 'd', value: d, meaning: '交互项 xy' },
+            { name: 'e', value: e, meaning: 'X 二次项 x²' },
+            { name: 'f', value: f, meaning: 'Y 二次项 y²' }
+        ];
+        result.r2 = computeR2(y, predictions);
+        result.rmse = computeRMSE(y, predictions);
+        result.n = data.length;
+        result.predictions = predictions;
+        result.residuals = residuals;
+        result.grid = generateFitGrid(data, predictFn, 50);
+        result.stationaryPoint = findStationaryPointQuadratic(b, c, d, e, f, data);
+        result.interpretation = buildQuadraticInterpretation(b, c, d, e, f);
+        result.suggestion = buildQuadraticSuggestion(result);
+
+        return result;
+    }
+
+    function runFit() {
+        const xIdx = Number(document.getElementById('fitX').value);
+        const yIdx = Number(document.getElementById('fitY').value);
+        const zIdx = Number(document.getElementById('fitZ').value);
+        const model = document.getElementById('fitModel').value;
+
+        if (xIdx === yIdx || xIdx === zIdx || yIdx === zIdx) {
+            alert('拟合变量不能重复选择。');
+            return;
+        }
+
+        const data = getFitData(xIdx, yIdx, zIdx);
+        if (data.length < 3) {
+            alert('有效数据点不足，无法进行拟合。');
+            return;
+        }
+
+        fitState.xIndex = xIdx;
+        fitState.yIndex = yIdx;
+        fitState.zIndex = zIdx;
+        fitState.model = model;
+        fitState.data = data;
+
+        let result;
+        try {
+            if (model === 'linear') {
+                result = fitLinearModel(data);
+            } else {
+                result = fitQuadraticModel(data);
+            }
+        } catch (err) {
+            console.error(err);
+            alert(`拟合失败：${err.message}`);
+            return;
+        }
+
+        fitState.result = result;
+        fitState.fitted = true;
+
+        renderFitResults();
+        renderFitPlots();
+    }
+
+    function renderFitResults() {
+        const result = fitState.result;
+
+        document.getElementById('fitEquation').innerHTML = result.equation;
+
+        const tbody = document.querySelector('#fitCoefTable tbody');
+        tbody.innerHTML = '';
+
+        result.coefficients.forEach(coef => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${coef.name}</td>
+                <td>${coef.value.toFixed(6)}</td>
+                <td>${coef.meaning}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+        document.getElementById('fitMetrics').innerHTML = `
+            样本数 n = ${result.n}<br>
+            R² = ${result.r2.toFixed(4)}<br>
+            RMSE = ${result.rmse.toFixed(4)}<br>
+            ${result.stationaryPoint
+                ? `内部驻点：(${result.stationaryPoint.x.toFixed(4)}, ${result.stationaryPoint.y.toFixed(4)})，类型：${result.stationaryPoint.type}`
+                : '未发现可靠内部驻点'}
+        `;
+
+        document.getElementById('fitInterpretation').innerHTML = result.interpretation;
+        document.getElementById('fitSuggestion').innerHTML = result.suggestion;
+    }
+
+    function renderFitPlot3D() {
+        const data = fitState.data;
+        const grid = fitState.result.grid;
+
+        const traces = [
+            {
+                x: data.map(d => d.x),
+                y: data.map(d => d.y),
+                z: data.map(d => d.z),
+                type: 'scatter3d',
+                mode: 'markers',
+                marker: { size: 5, color: '#ff4d4f' },
+                name: '原始数据'
+            }
+        ];
+
+        if (grid.x.length && grid.y.length && grid.z.length) {
+            traces.push({
+                x: grid.x,
+                y: grid.y,
+                z: grid.z,
+                type: 'surface',
+                opacity: 0.72,
+                colorscale: 'Viridis',
+                showscale: false,
+                name: '拟合曲面'
+            });
+        }
+
+        Plotly.newPlot('fitPlot3D', traces, {
+            scene: {
+                xaxis: { title: varNames[fitState.xIndex] },
+                yaxis: { title: varNames[fitState.yIndex] },
+                zaxis: { title: varNames[fitState.zIndex] }
+            },
+            margin: { l: 0, r: 0, b: 0, t: 30 }
+        }, {
+            responsive: true,
+            displaylogo: false
+        });
+    }
+
+    function renderFitPlot2D() {
+        const data = fitState.data;
+        const grid = fitState.result.grid;
+
+        const traces = [];
+
+        if (grid.x.length && grid.y.length && grid.z.length) {
+            traces.push({
+                x: grid.x,
+                y: grid.y,
+                z: grid.z,
+                type: 'contour',
+                colorscale: 'Viridis',
+                contours: { coloring: 'fill', showlines: true },
+                colorbar: { title: varNames[fitState.zIndex] },
+                name: '拟合等高线'
+            });
+        }
+
+        traces.push({
+            x: data.map(d => d.x),
+            y: data.map(d => d.y),
+            type: 'scatter',
+            mode: 'markers',
+            marker: {
+                size: 8,
+                color: '#fff',
+                line: { color: '#000', width: 1 }
+            },
+            name: '原始点'
+        });
+
+        Plotly.newPlot('fitPlot2D', traces, {
+            xaxis: { title: varNames[fitState.xIndex] },
+            yaxis: { title: varNames[fitState.yIndex] },
+            margin: { l: 60, r: 30, b: 60, t: 30 }
+        }, {
+            responsive: true,
+            displaylogo: false
+        });
+    }
+
+    function renderResidualPlot() {
+        const data = fitState.data;
+        const residuals = fitState.result.residuals;
+
+        Plotly.newPlot('fitResidualPlot', [{
+            x: data.map(d => d.x),
+            y: data.map(d => d.y),
+            mode: 'markers',
+            type: 'scatter',
+            marker: {
+                size: 10,
+                color: residuals,
+                colorscale: 'RdBu',
+                colorbar: { title: '残差' },
+                showscale: true,
+                line: { color: '#000', width: 0.5 }
+            },
+            text: residuals.map(r => `残差: ${r.toFixed(4)}`)
+        }], {
+            xaxis: { title: varNames[fitState.xIndex] },
+            yaxis: { title: varNames[fitState.yIndex] },
+            margin: { l: 60, r: 30, b: 60, t: 30 }
+        }, {
+            responsive: true,
+            displaylogo: false
+        });
+    }
+
+    function renderFitPlots() {
+        renderFitPlot3D();
+        renderFitPlot2D();
+        renderResidualPlot();
+    }
+
+    function compareFits() {
+        const xIdx = Number(document.getElementById('fitX').value);
+        const yIdx = Number(document.getElementById('fitY').value);
+        const zIdx = Number(document.getElementById('fitZ').value);
+
+        if (xIdx === yIdx || xIdx === zIdx || yIdx === zIdx) {
+            alert('拟合变量不能重复选择。');
+            return;
+        }
+
+        const data = getFitData(xIdx, yIdx, zIdx);
+        if (data.length < 3) {
+            alert('有效数据不足，无法比较模型。');
+            return;
+        }
+
+        try {
+            const linearResult = fitLinearModel(data);
+            const quadraticResult = fitQuadraticModel(data);
+
+            document.getElementById('fitCompareTable').innerHTML = `
+                <table class="result-table">
+                    <thead>
+                        <tr>
+                            <th>模型</th>
+                            <th>R²</th>
+                            <th>RMSE</th>
+                            <th>内部驻点</th>
+                            <th>结论</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>线性平面</td>
+                            <td>${linearResult.r2.toFixed(4)}</td>
+                            <td>${linearResult.rmse.toFixed(4)}</td>
+                            <td>无</td>
+                            <td>${linearResult.r2 >= 0.8 ? '整体趋势解释较好' : '仅适合作为基准模型'}</td>
+                        </tr>
+                        <tr>
+                            <td>二次响应面</td>
+                            <td>${quadraticResult.r2.toFixed(4)}</td>
+                            <td>${quadraticResult.rmse.toFixed(4)}</td>
+                            <td>${quadraticResult.stationaryPoint ? quadraticResult.stationaryPoint.type : '无'}</td>
+                            <td>${quadraticResult.r2 > linearResult.r2 ? '二次模型更优' : '线性模型已足够'}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            `;
+        } catch (err) {
+            console.error(err);
+            alert(`模型对比失败：${err.message}`);
+        }
+    }
+
+    function clearFitResults() {
+        fitState.fitted = false;
+        fitState.data = [];
+        fitState.result = createFitResult();
+
+        document.getElementById('fitEquation').innerHTML = '尚未拟合';
+        document.querySelector('#fitCoefTable tbody').innerHTML = '';
+        document.getElementById('fitMetrics').innerHTML = '尚未拟合';
+        document.getElementById('fitCompareTable').innerHTML = '尚未对比';
+        document.getElementById('fitInterpretation').innerHTML = '尚未拟合';
+        document.getElementById('fitSuggestion').innerHTML = '尚未生成';
+
+        try { Plotly.purge('fitPlot3D'); } catch (e) {}
+        try { Plotly.purge('fitPlot2D'); } catch (e) {}
+        try { Plotly.purge('fitResidualPlot'); } catch (e) {}
+    }
+
     initTable();
     initSelectors();
+    initFitSelectors();
+    updateScaleLabels();
+    syncAxis3D();
+    syncAxis2D();
     toggleUI();
+    switchTab('plotTab');
 </script>
 </body>
 </html>
