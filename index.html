@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>多维数据分析与拟合工具（4变量版）</title>
+    <title>多维数据分析与拟合工具（4变量版，250行）</title>
     <script src="https://cdn.plot.ly/plotly-2.24.1.min.js"></script>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
     <style>
@@ -51,7 +51,7 @@
         }
 
         .table-scroll {
-            max-height: 430px;
+            max-height: 520px;
             overflow: auto;
             border: 1px solid #dcdfe6;
             border-radius: 6px;
@@ -359,7 +359,7 @@
 <body>
 <div class="app-container">
     <header>
-        <h2 style="margin:0; color:#303133;">多维数据分析与拟合工具（4变量版）</h2>
+        <h2 style="margin:0; color:#303133;">多维数据分析与拟合工具（4变量版，250行）</h2>
     </header>
 
     <div class="table-section">
@@ -624,7 +624,7 @@
 
 <script>
     const tableBody = document.querySelector('#inputTable tbody');
-    const TOTAL_ROWS = 50;
+    const TOTAL_ROWS = 250;
     const DATA_COLS = 4;
     const varNames = ['Speed (um/s)', 'Load (mN)', 'Area (um²)', '临界磨损压强 (MPa)'];
 
@@ -714,23 +714,23 @@
     }
 
     function initTable() {
-        tableBody.innerHTML = '';
+        let html = '';
+        const colorOptionsHtml = colors.map(c => `<option value="${c[1]}">${c[0]}</option>`).join('');
+
         for (let i = 0; i < TOTAL_ROWS; i++) {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td>${i + 1}</td>
-                <td><input type="text" id="r${i}c0" data-row="${i}" data-col="0"></td>
-                <td><input type="text" id="r${i}c1" data-row="${i}" data-col="1"></td>
-                <td><input type="text" id="r${i}c2" data-row="${i}" data-col="2"></td>
-                <td><input type="text" id="r${i}c3" data-row="${i}" data-col="3"></td>
-                <td><select id="r${i}color"></select></td>
+            html += `
+                <tr>
+                    <td>${i + 1}</td>
+                    <td><input type="text" id="r${i}c0" data-row="${i}" data-col="0"></td>
+                    <td><input type="text" id="r${i}c1" data-row="${i}" data-col="1"></td>
+                    <td><input type="text" id="r${i}c2" data-row="${i}" data-col="2"></td>
+                    <td><input type="text" id="r${i}c3" data-row="${i}" data-col="3"></td>
+                    <td><select id="r${i}color">${colorOptionsHtml}</select></td>
+                </tr>
             `;
-            const sel = tr.querySelector('select');
-            colors.forEach(c => sel.add(new Option(c[0], c[1])));
-            sel.value = 'default';
-            tableBody.appendChild(tr);
         }
 
+        tableBody.innerHTML = html;
         bindCellEvents();
         setActiveCell(0, 0);
     }
@@ -1425,7 +1425,7 @@
         }));
 
         return {
-            version: '4.0',
+            version: '4.1',
             table,
             settings: {
                 plotMode: document.querySelector('input[name="plotMode"]:checked').value,
